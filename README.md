@@ -1,1 +1,1 @@
-# KH
+# Kramers-Henneberger Hamiltonian
