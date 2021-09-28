@@ -3,11 +3,11 @@
 
 ```bibtex
 @misc{floriani2021bogolyubovs,
-      title={Bogolyubov's averaging theorem applied to the Kramers-Henneberger Hamiltonian}, 
-      author={Elena Floriani and Jonathan Dubois and Cristel Chandre},
-      year={2021},
-      eprint={2107.01946},
-      archivePrefix={arXiv},
-      primaryClass={nlin.CD}
+      title = {Bogolyubov's averaging theorem applied to the Kramers-Henneberger Hamiltonian}, 
+      author = {Elena Floriani and Jonathan Dubois and Cristel Chandre},
+      year = {2021},
+      eprint = {2107.01946},
+      archivePrefix = {arXiv},
+      primaryClass = {nlin.CD}
 }
 ```
