@@ -1,8 +1,8 @@
 # Bogolyubov’s averaging applied to the Kramers-Henneberger Hamiltonian
 * [**KHBogolyubov.mlx**](https://github.com/cchandre/KH/blob/main/KHBogolyubov.mlx): Matlab livescript for the manuscript *Bogolyubov’s averaging theorem applied to the Kramers-Henneberger Hamiltonian* by E. Floriani, J. Dubois, C. Chandre
 
----
-Reference: E. Floriani, J. Dubois, C. Chandre, *Bogolyubov's averaging theorem applied to the Kramers-Henneberger Hamiltonian*, [Physica D](https://doi.org/10.1016/j.physd.2021.133124) 431, 133124 (2022); [arxiv:2107.01946](https://arxiv.org/abs/2107.01946)
+
+<ins>Reference:</ins> E. Floriani, J. Dubois, C. Chandre, *Bogolyubov's averaging theorem applied to the Kramers-Henneberger Hamiltonian*, [Physica D](https://doi.org/10.1016/j.physd.2021.133124) 431, 133124 (2022); [arxiv:2107.01946](https://arxiv.org/abs/2107.01946)
 
 ```bibtex
 @article{floriani2021,
@@ -74,6 +74,20 @@ The following options may be changed from default values in [`TDSE_dict.py`](htt
 - *ncv*: number of Lanczos vectors generated (default=100); see [eigsh](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.eigsh.html)
 - *Nphi_KH*: integer; number of points in one period to compute the Kramers-Henneberger potentiel *V*<sub>KH</sub>(x) (default=2<sup>12</sup>)
 - *ode_solver*: string; choice of splitting symplectic integrator; for a list see [pyHamSys](https://pypi.org/project/pyhamsys/) (default='BM4')
+
+<ins>Reference:</ins> E. Floriani, J. Dubois, C. Chandre, *Scars of Kramers-Henneberger atoms*, [arxiv:2407.18575](https://arxiv.org/abs/2407.18575)
+
+```bibtex
+@misc{floriani2024,
+      title={Scars of Kramers-Henneberger atoms}, 
+      author={Elena Floriani and Jonathan Dubois and Cristel Chandre},
+      year={2024},
+      eprint={2407.18575},
+      archivePrefix={arXiv},
+      primaryClass={nlin.CD},
+      url={https://arxiv.org/abs/2407.18575}, 
+}
+```
 
 ---
 
