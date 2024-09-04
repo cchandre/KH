@@ -16,4 +16,65 @@ Reference: E. Floriani, J. Dubois, C. Chandre, *Bogolyubov's averaging theorem a
          URL = {https://doi.org/10.1016/j.physd.2021.133124}
 }
 ```
+
+___
+# Time-dependent Schrödinger equation in the dipole approximation (TDSE)
+
+- [`TDSE_dict.py`](https://github.com/cchandre/KH/blob/main/TDSE_dict.py): to be edited to change the parameters of the TDSE computation (see below for a dictionary of parameters)
+
+- [`TDSE_classes.py`](https://github.com/cchandre/KH/blob/main/TDSE_classes.py): contains the TDSE class and main functions
+
+- [`TDSE.py`](https://github.com/cchandre/KH/blob/main/TDSE.py): contains the methods to execute TDSE
+
+Once [`TDSE_dict.py`](https://github.com/cchandre/KH/blob/main/TDSE_dict.py) has been edited with the relevant parameters, run the file as 
+```sh
+python3 TDSE.py
+```
+or 
+```sh
+nohup python3 -u TDSE.py &>TDSE.out < /dev/null &
+```
+The list of Python packages and their version are specified in [`requirements.txt`](https://github.com/cchandre/KH/blob/main/requirements.txt)
+
+##  Parameter dictionary
+
+- *Method*: string; 'wavefunction', 'ionization', 'HHG', 'plot_potentials, 'plot_eigenstates'; choice of method
+  - 'wavefunction': displays the wavefunction as a function of time
+  - 'ionization': computes the ionization probability as well as displaying the wavefunction as a function of time 
+  - 'plot_potentials': plots *V*(*x*) and *V*<sub>KH,2</sub>(*x*) and *V*<sub>KH,3</sub>(*x*) as a function of *x* in the range specified in *L*
+  - 'plot_eigenstates': plot the first *k* eigenstates and eigenvalues of the potential specified in *InitialState[1]*, where *k* is equal to *InitialState[0]*+1 
+
+####
+- *laser_intensity*: float or array floats; intensity of the laser field in W cm<sup>-2</sup>
+- *laser_wavelength*: float or array of floats; wavelength of the laser field in nm
+- *laser_envelope*: string; 'trapez', 'sinus', 'const'; envelope of the laser field during ramp-up and ramp-down
+- *laser_field*: lambda function returning an array of *n* floats; *n* components (where *n* is the dimension of configuration space) of the electric field (dipole approximation); NB: even in dim=1, include brackets[] 
+- *te*: array of 3 floats; duration of the ramp-up, plateau and ramp-down in laser cycles
+- *V*: lambda function; ionic potential
+- *InitialState*: integer or array [integer or tuple of integers, string]; integer = index of the initial eigenstate (0 corresponds to the ground state, 1 is the first excited state...); string = potential with which the initial state is computed ('V', 'VKH2' or 'VKH3'); in case a tuple of integers is entered, the initial state is a linear combination of the various states in the tuple
+- *DisplayCoord*: string; 'lab', 'KH2' or 'KH3'; if KH, the wave function is moved to the KH frame (for display and for saving) of order 2 or 3
+####
+- *L*: array of *n* floats; size of the box in each direction
+- *N*: array of *n* integers; number of points in each direction
+- *delta*: float or array of *n* floats; size of the absorbing boundary in each direction (if float, the size is taken equal in all dimensions)
+- *Lg*: float or array of *n* floats; size of the box for the initial computation of the initial state along each dimension; if float, [-*Lg*, *Lg*] in each dimension
+- *nsteps_per_period*: integer; number of steps per laser period for the integration; the time-step is then defined as 2&pi; /&omega; / *nsteps_per_period*
+- *scale*: string; 'linear' or 'log'; the axis scale type to apply for the representation of the wavefunction (if *Method*='wavefunction')
+- *SaveWaveFunction*: boolean; if True, saves the animation of the wavefunction  as an animated `.gif` image
+- *PlotData*: boolean; if True, displays the wavefunction on the screen as time increases (only for 1D and 2D)
+- *SaveData*: boolean; if True, the time evolution of the wave function are saved in a `.mat` file
+- *Parallelization*: int or string; int is the number of cores to be used, 'all' for all of the cores
+- *dpi*: integer; number of dots per inch for the movie frames (if *SaveWaveFunction* is True)
+- *refresh*: integer; the wavefunction is displayed every *refresh* time steps
+- *darkmode*: boolean; if True, plots are done in dark mode
+####
+The following options may be changed from default values in [`TDSE_dict.py`](https://github.com/cchandre/KH/blob/main/TDSE_dict.py):
+- *tol*: relative accuracy for eigenvalues (stopping criterion) (default=10<sup>-10</sup>, 0 implies machine precision); see [eigsh](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.eigsh.html)
+- *maxiter*: maximum number of Arnoldi update iterations allowed (default=1000); see [eigsh](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.eigsh.html)
+- *ncv*: number of Lanczos vectors generated (default=100); see [eigsh](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.eigsh.html)
+- *Nphi_KH*: integer; number of points in one period to compute the Kramers-Henneberger potentiel *V*<sub>KH</sub>(x) (default=2<sup>12</sup>)
+- *ode_solver*: string; choice of splitting symplectic integrator; for a list see [pyHamSys](https://pypi.org/project/pyhamsys/) (default='BM4')
+
+---
+
 For more information: <cristel.chandre@cnrs.fr>
