@@ -1,5 +1,5 @@
 ###################################################################################################
-##               Dictionary of parameters: https://github.com/cchandre/KH_intranet  (TDSE)       ##
+##               Dictionary of parameters: https://github.com/cchandre/KH   (TDSE)               ##
 ###################################################################################################
 import numpy as xp
 
@@ -8,29 +8,29 @@ Method = 'wavefunction'
 laser_intensity = 1e15
 laser_wavelength = 780
 laser_envelope = 'const'
-laser_field = lambda phi: [xp.sin(phi), 0]
+laser_field = lambda phi: [xp.sin(phi)]
 te = [1, 2, 1]
 
-a = 2.5
+a = 1
 V = lambda r: -1 / xp.sqrt(r**2 + a**2)
-InitialState = [(0, 1), 'VKH2']
+InitialState = [0, 'VKH2']
 DisplayCoord = 'KH2'
 
-L = [200, 75]
-N = [2**10, 2**8]
-delta = [10, 2]
-Lg = [200, 75]
+L = 200
+N = 2**10
+delta = 10
+Lg = 200
 
 nsteps_per_period = 1e3
-scale = 'log'
+scale = 'linear'
 
-SaveWaveFunction = True
+SaveWaveFunction = False
 PlotData = True
 SaveData = False
 dpi = 300
 refresh = 50
 
-darkmode = False
+darkmode = True
 
 ###################################################################################################
 ##                              DO NOT EDIT BELOW                                                ##
