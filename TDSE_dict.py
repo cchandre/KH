@@ -8,29 +8,29 @@ Method = 'wavefunction'
 laser_intensity = 1e15
 laser_wavelength = 780
 laser_envelope = 'const'
-laser_field = lambda phi: [xp.sin(phi)]
-te = [1, 2, 1]
+laser_field = lambda phi: [xp.sin(phi), 0]
+te = [1, 8, 1]
 
-a = 1
+a = 5
 V = lambda r: -1 / xp.sqrt(r**2 + a**2)
-InitialState = [0, 'VKH2']
+InitialState = [(0, 1), 'VKH2']
 DisplayCoord = 'KH2'
 
-L = 200
-N = 2**10
-delta = 10
-Lg = 200
+L = [200, 100]
+N = [2**10, 2**9]
+delta = [10, 5]
+Lg = [200, 100]
 
 nsteps_per_period = 1e3
-scale = 'linear'
+scale = 'log'
 
-SaveWaveFunction = False
+SaveWaveFunction = True
 PlotData = True
 SaveData = False
 dpi = 300
 refresh = 50
 
-darkmode = True
+darkmode = False
 
 ###################################################################################################
 ##                              DO NOT EDIT BELOW                                                ##
