@@ -20,11 +20,11 @@
 ___
 # Time-dependent Schrödinger equation in the dipole approximation (TDSE)
 
-Numerical integration of the following Schrödinger equation  
+Numerical integration of the following Schrödinger equation (in atomic units)
 ```math
 i \frac{\partial \psi}{\partial t} = \left( -\frac{\Delta}{2} + V(x) + E(t) x \right) \psi(x,t),
 ```
-where $E(t)=E_0 f(t) \Phi(\omega t)$ with $f(t)$ the laser envelope, and $\Phi$ a $2\pi$-periodic function. The frequency $\omega$ is defined by the laser wavelength, and the amplitude of the electric field $E_0$ is defined by the laser intensity. 
+where $E(t)=E_0 f(t) \Phi(\omega t)$ with $f(t)$ the laser envelope, and $\Phi$ a $2\pi$-periodic function. The frequency $\omega$ is defined by the laser wavelength, and the amplitude of the electric field $E_0$ is defined by the laser intensity. Here $V$ is the ionic potential. 
 
 - [`TDSE_dict.py`](https://github.com/cchandre/KH/blob/main/TDSE_dict.py): to be edited to change the parameters of the TDSE computation (see below for a dictionary of parameters)
 
