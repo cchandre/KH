@@ -54,10 +54,11 @@ The list of Python packages and their version are specified in [`requirements.tx
 - *laser_intensity*: float or array floats; intensity of the laser field in W cm<sup>-2</sup>
 - *laser_wavelength*: float or array of floats; wavelength of the laser field in nm
 - *laser_envelope*: string; 'trapez', 'sinus', 'const'; envelope of the laser field during ramp-up and ramp-down
-- *laser_field*: lambda function returning an array of *n* floats; *n* components (where *n* is the dimension of configuration space) of the electric field (dipole approximation); NB: even in dim=1, include brackets[] 
+- *laser_E*: lambda function returning an array of *n* floats; *n* components (where *n* is the dimension of configuration space) of the electric field (dipole approximation); NB: even in dim=1, include brackets[]; the electric field is then given by *E0* * *laser_envelope*(t) * *laser_E*(&omega; t) where *E0* = sqrt(*laser_intensity*)
 - *te*: array of 3 floats; duration of the ramp-up, plateau and ramp-down in laser cycles
 - *V*: lambda function; ionic potential
 - *InitialState*: integer or array [integer or tuple of integers, string]; integer = index of the initial eigenstate (0 corresponds to the ground state, 1 is the first excited state...); string = potential with which the initial state is computed ('V', 'VKH2' or 'VKH3'); in case a tuple of integers is entered, the initial state is a linear combination of the various states in the tuple
+- *InitialCoeffs*: array of floats; the initial state is a linear combination of eigenstates $\Psi_k(x)$, i.e., $\psi(x,0)=\sum_k c_k \Psi_k(x)$ where $k$ belongs to *InitialState*[0]
 - *DisplayCoord*: string; 'lab', 'KH2' or 'KH3'; if KH, the wave function is moved to the KH frame (for display and for saving) of order 2 or 3
 ####
 - *L*: array of *n* floats; size of the box in each direction
