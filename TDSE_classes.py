@@ -50,7 +50,7 @@ class TDSE:
         self.T = 2 * xp.pi / self.omega
         self.Up = self.E0**2 / (4 * self.omega**2)
         self.q0 = self.E0 / self.omega**2
-        self.E = lambda t: self.E0 * self.env(t) * xp.atleast_1d(self.field(self.omega * t))
+        self.E = lambda t: self.E0 * self.env(t) * xp.atleast_1d(self.laser_E(self.omega * t))
         self.te = self.te * self.T
         self.final_time = xp.sum(self.te)
         self.step = self.T / self.nsteps_per_period
@@ -227,9 +227,10 @@ class TDSE:
         return ifftn(xp.exp(-1j * self.Lap * h) * fftn(psi)) * self.Abs
     
     def initcond(self) -> Tuple[float, xp.ndarray, float]:
-        num_init = len(self.InitialState[0]) if type(self.InitialState[0]) is tuple else 1
-        lam, psi, err = self.eigenstates(self.Vgrid_, max(self.InitialState[0]) + 1 if num_init >= 2 else self.InitialState[0] + 1, output='all' if num_init >= 2 else 'last')
-        psi_ = xp.sum(psi, axis=0) / xp.sqrt(len(self.InitialState[0])) if num_init >= 2 else psi
+        num_init = len(xp.atleast_1d(self.InitialState[0]))
+        max_init = max(xp.atleast_1d(self.InitialState[0])) + 1
+        lam, psi, err = self.eigenstates(self.Vgrid_, max_init, output='all' if num_init >= 2 else 'last')
+        psi_ = xp.sum(xp.asarray([self.InitialCoeffs[_] * psi[_] for _ in range(num_init)]), axis=0) / xp.sqrt(num_init) if num_init >= 2 else psi
         lam_ = float(lam) if num_init == 1 else lam[0]
         err_ = max(err) if num_init >= 2 else float(err)
         if 'KH' in self.InitialState[1]:

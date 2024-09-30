@@ -65,10 +65,10 @@ def run_method(self):
 		fig, ax = display_axes(self, [], type='Potentials')
 	elif self.Method == 'plot_eigenstates':
 		start = time.time()
-		lam, psi, err = self.eigenstates(self.Vgrid_, self.InitialState[0] + 1, output='all')
+		lam, psi, err = self.eigenstates(self.Vgrid_, max(xp.atleast_1d(self.InitialState[0])) + 1, output='all')
 		fig, ax = display_axes(self, [lam, psi, err], type='eigenstates')
 		print(f'\033[90m        Computation of the following eigenstates finished in {int(time.time() - start)} seconds \033[00m')
-		for _ in range(self.InitialState[0] + 1):
+		for _ in range(max(xp.atleast_1d(self.InitialState[0])) + 1):
 			message = f'\033[90m        '
 			if self.dim == 1:
 				message += f'Eigenstate {_} : E0 = {lam[_]:.6f} (err={err[_]:.1e})'
@@ -147,13 +147,13 @@ def display_axes(self, data, type:str='wavefunction'):
 			fig = plt.figure(figsize=(8, 8))
 			fig.canvas.manager.set_window_title(f'TDSE simulation: {type} of {self.InitialState[1]}')
 			ax = plt.gca()
-			for _ in range(self.InitialState[0] + 1):
+			for _ in range(max(xp.atleast_1d(self.InitialState[0])) + 1):
 				ax.plot(self.xgrid[0] / self.q0, psi[_], label=f'{lam[_]:.6f} (err={err[_]:.2e})')
 			ax.set_xlabel('$x$')
 			ax.set_xlim((-self.L[0] / self.q0, self.L[0] / self.q0))
 			ax.legend(loc='upper right', labelcolor='linecolor')
 		elif self.dim ==2:
-			for _ in range(self.InitialState[0] + 1):
+			for _ in range(max(xp.atleast_1d(self.InitialState[0])) + 1):
 				vmin = min(psi[_].min(), -1e-3)
 				vmax = max(psi[_].max(), 1e-3)
 				divnorm = colors.TwoSlopeNorm(vmin=vmin, vcenter=0, vmax=vmax)
