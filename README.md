@@ -47,7 +47,7 @@ The list of Python packages and their version are specified in [`requirements.tx
 - *Method*: string; 'wavefunction', 'ionization', 'HHG', 'plot_potentials, 'plot_eigenstates'; choice of method
   - 'wavefunction': displays the wavefunction as a function of time
   - 'ionization': computes the ionization probability as well as displaying the wavefunction as a function of time 
-  - 'plot_potentials': plots *V*(*x*) and *V*<sub>KH,2</sub>(*x*) and *V*<sub>KH,3</sub>(*x*) as a function of *x* in the range specified in *L*
+  - 'plot_potentials': plots *V*(*x*) and the Kramers-Henneberger potentials *V*<sub>KH,2</sub>(*x*) and *V*<sub>KH,3</sub>(*x*), as a function of *x* in the range specified in *L*
   - 'plot_eigenstates': plot the first *k* eigenstates and eigenvalues of the potential specified in *InitialState[1]*, where *k* is equal to *InitialState[0]*+1 
 
 ####
