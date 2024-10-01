@@ -3,18 +3,18 @@
 ###################################################################################################
 import numpy as xp
 
-Method = 'plot_eigenstates'
+Method = 'wavefunction'
 
 laser_intensity = 1e15
 laser_wavelength = 780
 laser_envelope = 'const'
-laser_E = lambda phi: [xp.sin(phi)]
+laser_E = lambda phi: xp.sin(phi)
 te = [1, 2, 1]
 
 a = 5
 V = lambda r: -1 / xp.sqrt(r**2 + a**2)
 InitialState = [(0, 1), 'VKH2']
-InitialCoeffs = (1, -1)
+InitialCoeffs = (1, 1)
 DisplayCoord = 'KH2'
 
 L = 200
@@ -40,13 +40,14 @@ L = xp.atleast_1d(L)
 N = xp.atleast_1d(N)
 delta = xp.atleast_1d(delta)
 Lg = xp.atleast_1d(Lg)
-if not len(L) == len(N) == len(xp.atleast_1d(laser_E(0))):
+laser_E_ = lambda phi: xp.atleast_1d(laser_E(phi))
+if not len(L) == len(N) == len(laser_E_(0)):
     raise ValueError('Dimension of variables in dictionary not compatible')
 if not len(delta) == len(L):
     delta = delta[0] * xp.ones_like(L)
 if not len(Lg) == len(L):
     Lg = Lg[0] * xp.ones_like(L)
-if isinstance(InitialState, int) or isinstance(InitialState, tuple):
+if isinstance(InitialState, (int, tuple)):
     InitialState = [InitialState, 'V']
 if 'InitialCoeffs' not in locals():
     InitialCoeffs = xp.ones_like(InitialState[0])
@@ -55,7 +56,7 @@ dict_ = {
         'laser_intensity': laser_intensity,
         'laser_wavelength': laser_wavelength,
         'envelope': laser_envelope,
-        'laser_E': laser_E,
+        'laser_E': laser_E_,
         'te': xp.asarray(te),
         'nsteps_per_period': nsteps_per_period,
         'dim': len(L),
