@@ -3,7 +3,7 @@
 ###################################################################################################
 import numpy as xp
 
-Method = 'wavefunction'
+Method = 'HHG'
 
 laser_intensity = 1e15
 laser_wavelength = 780
@@ -11,7 +11,7 @@ laser_envelope = 'const'
 laser_E = lambda phi: xp.sin(phi)
 te = [1, 2, 1]
 
-a = 5
+a = 1
 V = lambda r: -1 / xp.sqrt(r**2 + a**2)
 InitialState = [(0, 1), 'VKH2']
 InitialCoeffs = (1, 1)
@@ -51,6 +51,8 @@ if isinstance(InitialState, (int, tuple)):
     InitialState = [InitialState, 'V']
 if 'InitialCoeffs' not in locals():
     InitialCoeffs = xp.ones_like(InitialState[0])
+if 'HHGmethod' not in locals():
+    HHGmethod = 'dipole'
 dict_ = {
         'Method': Method,
         'laser_intensity': laser_intensity,
@@ -66,6 +68,7 @@ dict_ = {
         'InitialState': InitialState,
         'InitialCoeffs': InitialCoeffs,
         'DisplayCoord': DisplayCoord,
+        'HHGmethod': HHGmethod,
         'Lg': Lg,
         'L': L,
         'N': N,

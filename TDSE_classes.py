@@ -51,6 +51,7 @@ class TDSE:
         self.Up = self.E0**2 / (4 * self.omega**2)
         self.q0 = self.E0 / self.omega**2
         self.E = lambda t: self.E0 * self.env(t) * self.laser_E(self.omega * t)
+        self.npoints = int(xp.sum(self.te) * self.nsteps_per_period)
         self.te = self.te * self.T
         self.final_time = xp.sum(self.te)
         self.step = self.T / self.nsteps_per_period
@@ -71,7 +72,9 @@ class TDSE:
         if self.InitialState[1] == 'V':
             self.Vgrid_ = self.Vgrid.copy()
         elif 'KH' in self.InitialState[1]:
-            self.Vgrid_ = self.kramers_henneberger(int(self.InitialState[1][-1]))
+            self.Vgrid_ = self.kh_potential(int(self.InitialState[1][-1]))
+        if self.Method == "HHG":
+            self.hhg = xp.array([]).reshape(0, self.dim)
 
     def eigenstates(self, V:xp.ndarray, k:int, output:str='last'):
         indx = [[xp.abs(self.vecx[_] + self.Lg[_]).argmin(), xp.abs(self.vecx[_] - self.Lg[_]).argmin()] for _ in range(self.dim)]
@@ -127,7 +130,7 @@ class TDSE:
         else:
             return t, A, q, []
 
-    def kramers_henneberger(self, order:int=2) -> xp.ndarray:
+    def kh_potential(self, order:int=2) -> xp.ndarray:
         q = self.q_.reshape((-1,) + self.dim_ext)
         V2 = self.V(xp.sqrt(((self.xgrid[xp.newaxis] + q)**2).sum(axis=1))).mean(axis=0)
         if order == 2:
@@ -162,8 +165,7 @@ class TDSE:
     def change_frame(self, t:float, psi:xp.ndarray) -> xp.ndarray:
         if 'KH' in self.DisplayCoord:
             return self.lab2kh(psi, t, order=int(self.DisplayCoord[-1]), dir=1)
-        else:
-            return psi
+        return psi
 
     def env(self, t:float) -> xp.ndarray:
         te = xp.cumsum(self.te)
@@ -186,17 +188,21 @@ class TDSE:
         axis = tuple(range(1, self.dim + 1))
         return (xp.sum(xp.abs(psi[xp.newaxis])**2 * D, axis=axis) * xp.prod(self.dx)).flatten()
 
-    def compute_spectrum(self, vec:xp.ndarray) -> xp.ndarray:
-        npoints = self.ncycles * self.nsteps
-        filter = hann(npoints).reshape(-1, 1)
-        f_hhg = 2 * xp.pi / self.final_time * rfftfreq(npoints, d=1/npoints)
-        if self.HHGmethod == 'acceleration':
-            HHGspectrum = rfft(vec * filter, axis=0)
-        elif self.HHGmethod == 'dipole':
-            HHGspectrum = -rfft(vec * filter, axis=0) * f_hhg**2
-        return f_hhg / self.omega, xp.abs(HHGspectrum)**2
+    def compute_spectrum(self, t:float, vec:xp.ndarray) -> xp.ndarray:
+        npoints = int(t / self.T * self.nsteps_per_period)
+        print(vec.shape)
+        if npoints:
+            filter = hann(npoints).reshape(-1, 1)
+            print(filter.shape)
+            f_hhg = 2 * xp.pi / t * rfftfreq(npoints, d=1/npoints)
+            if self.HHGmethod == 'acceleration':
+                hhg_spectrum = rfft(vec * filter, axis=0)
+            elif self.HHGmethod == 'dipole':
+                hhg_spectrum = -rfft(vec * filter, axis=0) * f_hhg**2
+            return f_hhg / self.omega, xp.abs(hhg_spectrum)**2
+        return [], []
     
-    def plot(self, ax, h, t:float, psi:xp.ndarray, cmax:float=None):
+    def plot(self, ax, h, t:float, psi:xp.ndarray):
         if self.PlotData:
             if self.Method == 'wavefunction':
                 psi_ = self.change_frame(t, psi)
@@ -204,6 +210,12 @@ class TDSE:
                     h.set_ydata(xp.abs(psi_)**2)
                 elif self.dim == 2:
                     h.set_data(xp.abs(psi_).transpose()**2)
+            elif self.Method == 'HHG':
+                self.hhg = xp.vstack((self.hhg, self.dipole(t, psi)))
+                omega, spectrum = self.compute_spectrum(t, self.hhg) 
+                if len(omega):
+                    h.set_xdata(omega)
+                    h.set_ydata(spectrum)
             ax.set_title(f'$t / T = {{{t / self.T:.2f}}}$', loc='right', pad=20)
             plt.pause(1e-4)
 

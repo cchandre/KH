@@ -61,9 +61,7 @@ def main() -> None:
 
 def run_method(self):
 	filestr = type(self).__name__ + '_' + time.strftime('%Y%m%d_%H%M')
-	if self.Method == 'plot_potentials':
-		fig, ax = display_axes(self, [], type='Potentials')
-	elif self.Method == 'plot_eigenstates':
+	if self.Method == 'eigenstates':
 		start = time.time()
 		lam, psi, err = self.eigenstates(self.Vgrid_, max(xp.atleast_1d(self.InitialState[0])) + 1, output='all')
 		fig, ax = display_axes(self, [lam, psi, err], type='eigenstates')
@@ -79,7 +77,7 @@ def run_method(self):
 				L, Lz = self.quantum_numbers(psi[_])
 				message += f' with L = {L:.2f} and Lz = {Lz:.2f} \033[00m'
 			print(message + ' \033[00m')
-	elif self.Method in ['wavefunction', 'ionization']:
+	elif self.Method in ['wavefunction', 'HHG', 'ionization']:
 		plt.ion()
 		start = time.time()
 		lam0, psi0, err = self.initcond()
@@ -121,27 +119,7 @@ def run_method(self):
 	plt.show()
 
 def display_axes(self, data, type:str='wavefunction'):
-	if type == 'wavefunction':
-		fig, ax = plt.subplots(figsize=(8, 4))
-		fig.canvas.manager.set_window_title(f'TDSE simulation: {type}')
-		if self.dim == 1:
-			ax.plot(self.xgrid[0] / self.q0, xp.abs(data)**2, cs[2], linewidth=1, label=r'$\vert\psi (x,0)\vert^2$')
-			h, = ax.plot(self.xgrid[0] / self.q0, xp.abs(data)**2, cs[1], linewidth=2, label=r'$\vert\psi (x,t)\vert^2$')
-			ax.set_yscale(self.scale)
-			ax.legend(loc='upper right', labelcolor='linecolor')
-			#ax.set_ylim((-0.003, 0.07))
-			ax.set_xlim((-self.L[0] / self.q0, self.L[0]/self.q0))
-			ax.set_aspect('auto')
-			plt.tight_layout(pad=2)
-		elif self.dim == 2:
-			norm = LogNorm(vmin=1e-4, vmax=(xp.abs(data)**2).max(), clip=True) if self.scale=='log' else None
-			h = ax.imshow(xp.abs(data).transpose()**2, extent=(-self.L[0] / self.q0, self.L[0] / self.q0, -self.L[1] / self.q0, self.L[1] / self.q0), cmap=cmap_psi, norm=norm, interpolation='nearest')
-			fig.colorbar(h, ax=ax, shrink=0.5)
-			ax.set_ylabel('$y/q$')
-		ax.set_title('$t / T = 0 $', loc='right', pad=20)
-		ax.set_xlabel('$x/q$')
-		return fig, ax, h
-	elif type == 'eigenstates':
+	if type == 'eigenstates':
 		lam, psi, err = data[0], data[1], data[2]
 		if self.dim == 1:
 			fig = plt.figure(figsize=(8, 8))
@@ -165,34 +143,31 @@ def display_axes(self, data, type:str='wavefunction'):
 				ax.set_xlabel('$x$')
 				ax.set_ylabel('$y$')
 				plt.colorbar(im)
-	elif type == 'Potentials':
+	elif type == 'wavefunction':
+		fig, ax = plt.subplots(figsize=(8, 4))
+		fig.canvas.manager.set_window_title(f'TDSE simulation: {type}')
 		if self.dim == 1:
-			fig = plt.figure(figsize=(8, 8))
-			fig.canvas.manager.set_window_title('TDSE simulation: ' + type)
-			ax = plt.gca()
-			ax.plot(self.xgrid[0] / self.q0, self.Vgrid, cs[2], label=r'$V(x)$')
-			ax.plot(self.xgrid[0] / self.q0, self.kramers_henneberger(2), cs[3], label=r'$V_\mathrm{KH, 2}(x)$')
-			ax.plot(self.xgrid[0] / self.q0, self.kramers_henneberger(3), cs[4], label=r'$V_\mathrm{KH, 3}(x)$')
-			ax.set_xlabel('$x/q$')
-			ax.set_xlim((-self.L[0] / self.q0, self.L[0] / self.q0))
+			ax.plot(self.xgrid[0] / self.q0, xp.abs(data)**2, cs[2], linewidth=1, label=r'$\vert\psi (x,0)\vert^2$')
+			h, = ax.plot(self.xgrid[0] / self.q0, xp.abs(data)**2, cs[1], linewidth=2, label=r'$\vert\psi (x,t)\vert^2$')
+			ax.set_yscale(self.scale)
 			ax.legend(loc='upper right', labelcolor='linecolor')
+			#ax.set_ylim((-0.003, 0.07))
+			ax.set_xlim((-self.L[0] / self.q0, self.L[0]/self.q0))
+			ax.set_aspect('auto')
+			plt.tight_layout(pad=2)
 		elif self.dim == 2:
-			plt.rcParams.update({'figure.figsize': [21, 7]})
-			fig, ax = plt.subplots(1, 3)
-			extent = (-self.L[0] / self.q0, self.L[0] / self.q0, -self.L[1] / self.q0, self.L[1] / self.q0)
-			v = [self.Vgrid.min(), self.Vgrid.max()]
-			ax[0].imshow(self.Vgrid.transpose(), origin='lower', extent=extent, cmap='gist_yarg', vmin=v[0], vmax=v[1])
-			ax[1].imshow(self.kramers_henneberger(2).transpose(), origin='lower', extent=extent, cmap='gist_yarg', vmin=v[0], vmax=v[1])
-			ax[2].imshow(self.kramers_henneberger(3).transpose(), origin='lower', extent=extent, cmap='gist_yarg', vmin=v[0], vmax=v[1])
-			ax[1].set_title('$V_\mathrm{KH, 2}$')
-			ax[2].set_title('$V_\mathrm{KH, 3}$')
-			for _ in ax:
-				_.set_xlabel('$x/q$')
-				_.set_ylabel('$y/q$')
-		else:
-			fig, ax = [], []
-			warnings.warn('Dimension not compatible for display')
-	return fig, ax
+			norm = LogNorm(vmin=1e-4, vmax=(xp.abs(data)**2).max(), clip=True) if self.scale=='log' else None
+			h = ax.imshow(xp.abs(data).transpose()**2, extent=(-self.L[0] / self.q0, self.L[0] / self.q0, -self.L[1] / self.q0, self.L[1] / self.q0), cmap=cmap_psi, norm=norm, interpolation='nearest')
+			fig.colorbar(h, ax=ax, shrink=0.5)
+			ax.set_ylabel('$y/q$')
+		ax.set_title('$t / T = 0 $', loc='right', pad=20)
+		ax.set_xlabel('$x/q$')
+	elif type == 'HHG':
+		fig, ax = plt.subplots(figsize=(8, 4))
+		fig.canvas.manager.set_window_title(f'TDSE simulation: {type}')
+		h, = ax.plot([], [], cs[1], linewidth=2, label=r'HHG')
+		ax.set_xlabel('$\omega /\omega_\mathrm{field}$')
+	return fig, ax, h
 
 def save_data(self, data:xp.ndarray, filestr:str, info=[]) -> None:
 	if self.SaveData:
