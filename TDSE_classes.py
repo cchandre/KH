@@ -50,7 +50,7 @@ class TDSE:
         self.T = 2 * xp.pi / self.omega
         self.Up = self.E0**2 / (4 * self.omega**2)
         self.q0 = self.E0 / self.omega**2
-        self.E = lambda t: self.E0 * self.env(t) * xp.atleast_1d(self.laser_E(self.omega * t))
+        self.E = lambda t: self.E0 * self.env(t) * self.laser_E(self.omega * t)
         self.te = self.te * self.T
         self.final_time = xp.sum(self.te)
         self.step = self.T / self.nsteps_per_period
@@ -66,7 +66,8 @@ class TDSE:
         self.xshape = self.Vgrid.shape
         self.dim_ext = (self.dim,) + self.dim * (1,)
         self.Tavg = self.T if self.env=='const' else self.final_time
-        self.t_, self.A_, self.q_, self.phib_ = self.compute_stflds()
+        if 'KH' in self.DisplayCoord + self.InitialState[1]:
+            self.t_, self.A_, self.q_, self.phib_ = self.compute_stflds()
         if self.InitialState[1] == 'V':
             self.Vgrid_ = self.Vgrid.copy()
         elif 'KH' in self.InitialState[1]:
