@@ -58,7 +58,7 @@ The list of Python packages and their version are specified in [`requirements.tx
 - *te*: array of 3 floats; duration of the ramp-up, plateau and ramp-down in laser cycles
 - *V*: lambda function; ionic potential
 - *InitialState*: integer or array [integer or tuple of integers, string]; integer = index of the initial eigenstate (0 corresponds to the ground state, 1 is the first excited state...); string = potential with which the initial state is computed ('V', 'VKH2' or 'VKH3'); in case a tuple of integers is entered, the initial state is a linear combination of the various states in the tuple
-- *InitialCoeffs*: array of floats; the initial state is a linear combination of eigenstates $\Psi_k(x)$, i.e., $\psi(x,0)=\sum_k c_k \Psi_k(x)$ where $k$ belongs to *InitialState*[0]
+- *InitialCoeffs*: array of floats; the initial state is a linear combination of eigenstates $\Psi_k(x)$ of the potential defined in *InitialState*[1], i.e., $\psi(x,0)=\sum_k c_k \Psi_k(x)$ where $k$ belongs to *InitialState*[0]
 - *DisplayCoord*: string; 'lab', 'KH2' or 'KH3'; if KH (Kramers-Henneberger), the wave function is moved to the KH frame (for display and for saving) of order 2 or 3
 ####
 - *L*: array of *n* floats; size of the box in each direction
