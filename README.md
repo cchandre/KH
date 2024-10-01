@@ -20,9 +20,9 @@
 ___
 # Time-dependent Schrödinger equation in the dipole approximation (TDSE)
 
-Numerical integration of the following Schrödinger equation (in atomic units)
+Numerical integration of the following Schrödinger equation (in the dipole approximation and in atomic units)
 ```math
-i \frac{\partial \psi}{\partial t} = \left( -\frac{\Delta}{2} + V(x) + E(t) x \right) \psi(x,t),
+i \frac{\partial \psi}{\partial t} = \left( -\frac{\Delta}{2} + V(x) + x E(t) \right) \psi(x,t),
 ```
 where $E(t)=E_0 f(t) \Phi(\omega t)$ with $f(t)$ the laser envelope, and $\Phi$ a $2\pi$-periodic function. The frequency $\omega$ is defined by the laser wavelength, and the amplitude of the electric field $E_0$ is defined by the laser intensity. Here $V$ is the ionic potential. 
 
@@ -54,7 +54,7 @@ The list of Python packages and their version are specified in [`requirements.tx
 - *laser_intensity*: float or array floats; intensity of the laser field in W cm<sup>-2</sup>
 - *laser_wavelength*: float or array of floats; wavelength of the laser field in nm
 - *laser_envelope*: string; 'trapez', 'sinus', 'const'; envelope of the laser field during ramp-up and ramp-down
-- *laser_E*: lambda function returning an array of *n* floats; *n* components (where *n* is the dimension of configuration space) of the electric field (dipole approximation); NB: even in dim=1, include brackets[]; the electric field is then given by *E0* * *laser_envelope*(t) * *laser_E*(&omega; t) where *E0* = sqrt(*laser_intensity*)
+- *laser_E*: lambda function returning an array of *n* floats; *n* components (where *n* is the dimension of configuration space) of the electric field (dipole approximation); the electric field is then given by *E0* * *laser_envelope*(t) * *laser_E*(&omega; t) where *E0* = sqrt(*laser_intensity*)
 - *te*: array of 3 floats; duration of the ramp-up, plateau and ramp-down in laser cycles
 - *V*: lambda function; ionic potential
 - *InitialState*: integer or array [integer or tuple of integers, string]; integer = index of the initial eigenstate (0 corresponds to the ground state, 1 is the first excited state...); string = potential with which the initial state is computed ('V', 'VKH2' or 'VKH3'); in case a tuple of integers is entered, the initial state is a linear combination of the various states in the tuple
