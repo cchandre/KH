@@ -51,15 +51,15 @@ The list of Python packages and their version are specified in [`requirements.tx
   - 'plot_eigenstates': plot the first *k* eigenstates and eigenvalues of the potential specified in *InitialState[1]*, where *k* is equal to *InitialState[0]*+1 
 
 ####
-- *laser_intensity*: float or array floats; intensity of the laser field in W cm<sup>-2</sup>
-- *laser_wavelength*: float or array of floats; wavelength of the laser field in nm
+- *laser_intensity*: float; intensity of the laser field in W cm<sup>-2</sup>
+- *laser_wavelength*: float; wavelength of the laser field in nm
 - *laser_envelope*: string; 'trapez', 'sinus', 'const'; envelope of the laser field during ramp-up and ramp-down
 - *laser_E*: lambda function returning an array of *n* floats; *n* components (where *n* is the dimension of configuration space) of the electric field (dipole approximation); the electric field is then given by *E0* * *laser_envelope*(t) * *laser_E*(&omega; t) where *E0* = sqrt(*laser_intensity*)
 - *te*: array of 3 floats; duration of the ramp-up, plateau and ramp-down in laser cycles
 - *V*: lambda function; ionic potential
 - *InitialState*: integer or array [integer or tuple of integers, string]; integer = index of the initial eigenstate (0 corresponds to the ground state, 1 is the first excited state...); string = potential with which the initial state is computed ('V', 'VKH2' or 'VKH3'); in case a tuple of integers is entered, the initial state is a linear combination of the various states in the tuple
 - *InitialCoeffs*: array of floats; the initial state is a linear combination of eigenstates $\Psi_k(x)$, i.e., $\psi(x,0)=\sum_k c_k \Psi_k(x)$ where $k$ belongs to *InitialState*[0]
-- *DisplayCoord*: string; 'lab', 'KH2' or 'KH3'; if KH, the wave function is moved to the KH frame (for display and for saving) of order 2 or 3
+- *DisplayCoord*: string; 'lab', 'KH2' or 'KH3'; if KH (Kramers-Henneberger), the wave function is moved to the KH frame (for display and for saving) of order 2 or 3
 ####
 - *L*: array of *n* floats; size of the box in each direction
 - *N*: array of *n* integers; number of points in each direction
@@ -70,7 +70,6 @@ The list of Python packages and their version are specified in [`requirements.tx
 - *SaveWaveFunction*: boolean; if True, saves the animation of the wavefunction  as an animated `.gif` image
 - *PlotData*: boolean; if True, displays the wavefunction on the screen as time increases (only for 1D and 2D)
 - *SaveData*: boolean; if True, the time evolution of the wave function are saved in a `.mat` file
-- *Parallelization*: int or string; int is the number of cores to be used, 'all' for all of the cores
 - *dpi*: integer; number of dots per inch for the movie frames (if *SaveWaveFunction* is True)
 - *refresh*: integer; the wavefunction is displayed every *refresh* time steps
 - *darkmode*: boolean; if True, plots are done in dark mode
@@ -79,7 +78,7 @@ The following options may be changed from default values in [`TDSE_dict.py`](htt
 - *tol*: relative accuracy for eigenvalues (stopping criterion) (default=10<sup>-10</sup>, 0 implies machine precision); see [eigsh](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.eigsh.html)
 - *maxiter*: maximum number of Arnoldi update iterations allowed (default=1000); see [eigsh](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.eigsh.html)
 - *ncv*: number of Lanczos vectors generated (default=100); see [eigsh](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.eigsh.html)
-- *Nphi_KH*: integer; number of points in one period to compute the Kramers-Henneberger potentiel *V*<sub>KH</sub>(x) (default=2<sup>12</sup>)
+- *Nkh*: integer; number of points in one period to compute the Kramers-Henneberger potentiel *V*<sub>KH</sub>(x) (default=2<sup>12</sup>)
 - *ode_solver*: string; choice of splitting symplectic integrator; for a list see [pyHamSys](https://pypi.org/project/pyhamsys/) (default='BM4')
 
 <ins>Reference:</ins> E. Floriani, J. Dubois, C. Chandre, *Scars of Kramers-Henneberger atoms*, [arxiv:2407.18575](https://arxiv.org/abs/2407.18575)
