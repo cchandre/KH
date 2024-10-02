@@ -44,10 +44,12 @@ The list of Python packages and their version are specified in [`requirements.tx
 
 ##  Parameter dictionary
 
-- *Method*: string; 'wavefunction', 'ionization', 'eigenstates'; choice of method
-  - 'wavefunction': displays the wavefunction as a function of time
+- *Method*: string; 'eigenstates', 'wavefunction', 'HHG', 'ionization'; choice of method
+  - 'eigenstates': plot the first *k* eigenstates and eigenvalues of the potential specified in *InitialState[1]*, where *k* is equal to *InitialState[0]*+1
+  - 'wavefunction': displays the wavefunction as a function of time obtained by integrating the TDSE equation
+  - 'HHG': compute the high-harmonic generation (HHG) spectrum as a function of time 
   - 'ionization': computes the ionization probability as well as displaying the wavefunction as a function of time 
-  - 'eigenstates': plot the first *k* eigenstates and eigenvalues of the potential specified in *InitialState[1]*, where *k* is equal to *InitialState[0]*+1 
+   
 
 ####
 - *laser_intensity*: float; intensity of the laser field in W cm<sup>-2</sup>
@@ -56,7 +58,7 @@ The list of Python packages and their version are specified in [`requirements.tx
 - *laser_E*: lambda function returning an array of *n* floats; *n* components (where *n* is the dimension of configuration space) of the electric field (dipole approximation); the electric field is then given by *E0* * *laser_envelope*(t) * *laser_E*(&omega; t) where *E0* = sqrt(*laser_intensity*)
 - *te*: array of 3 floats; duration of the ramp-up, plateau and ramp-down in laser cycles
 - *V*: lambda function; ionic potential
-- *InitialState*: integer or array [integer or tuple of integers, string]; integer = index of the initial eigenstate (0 corresponds to the ground state, 1 is the first excited state...); string = potential with which the initial state is computed ('V', 'VKH2' or 'VKH3'); in case a tuple of integers is entered, the initial state is a linear combination of the various states in the tuple
+- *InitialState*: integer or array [integer or tuple of integers or lambda function, string]; integer = index of the initial eigenstate (0 corresponds to the ground state, 1 is the first excited state...); string = potential with which the initial state is computed ('V', 'VKH2' or 'VKH3'); in case a tuple of integers is entered, the initial state is a linear combination of the various states in the tuple with the coefficients given in *InitialCoeffs*; if *InitialState* or *InitialState*[0] is a lambda function, the initial state is computed on the grid using this function
 - *InitialCoeffs*: array of floats; the initial state is a linear combination of eigenstates $\Psi_k(x)$ of the potential defined in *InitialState*[1], i.e., $\psi(x,0)=\sum_k c_k \Psi_k(x)$ where $k$ belongs to *InitialState*[0]
 - *DisplayCoord*: string; 'lab', 'KH2' or 'KH3'; if KH (Kramers-Henneberger), the wave function is moved to the KH frame (for display and for saving) of order 2 or 3
 ####
