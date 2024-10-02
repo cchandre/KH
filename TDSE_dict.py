@@ -8,18 +8,18 @@ Method = 'HHG'
 laser_intensity = 1e15
 laser_wavelength = 780
 laser_envelope = 'const'
-laser_E = lambda phi: xp.sin(phi)
-te = [1, 2, 1]
+laser_E = lambda phi: xp.cos(phi)
+te = [1, 1, 1]
 
 a = 1
 V = lambda r: -1 / xp.sqrt(r**2 + a**2)
-InitialState = [(0, 1), 'VKH2']
+InitialState = [lambda x: (0.2236**2 / xp.pi)**0.25 * xp.exp(-0.2236**2 / 2 * x**2), 'V']
 InitialCoeffs = (1, 1)
-DisplayCoord = 'KH2'
+DisplayCoord = 'V'
 
-L = 200
-N = 2**10
-delta = 10
+L = 2000
+N = 2**14
+delta = 30
 Lg = 200
 
 nsteps_per_period = 1e3
@@ -31,7 +31,7 @@ SaveData = False
 dpi = 300
 refresh = 50
 
-darkmode = False
+darkmode = True
 
 ###################################################################################################
 ##                              DO NOT EDIT BELOW                                                ##
@@ -47,12 +47,12 @@ if not len(delta) == len(L):
     delta = delta[0] * xp.ones_like(L)
 if not len(Lg) == len(L):
     Lg = Lg[0] * xp.ones_like(L)
-if isinstance(InitialState, (int, tuple)):
+if isinstance(InitialState, (int, tuple, type(lambda:0))):
     InitialState = [InitialState, 'V']
-if 'InitialCoeffs' not in locals():
+if 'InitialCoeffs' not in locals() and isinstance(InitialState[0], (int, tuple)):
     InitialCoeffs = xp.ones_like(InitialState[0])
-if 'HHGmethod' not in locals():
-    HHGmethod = 'dipole'
+if isinstance(InitialState[0], type(lambda:0)):
+    InitialCoeffs = []
 dict_ = {
         'Method': Method,
         'laser_intensity': laser_intensity,
@@ -68,7 +68,6 @@ dict_ = {
         'InitialState': InitialState,
         'InitialCoeffs': InitialCoeffs,
         'DisplayCoord': DisplayCoord,
-        'HHGmethod': HHGmethod,
         'Lg': Lg,
         'L': L,
         'N': N,

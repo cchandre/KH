@@ -51,7 +51,6 @@ class TDSE:
         self.Up = self.E0**2 / (4 * self.omega**2)
         self.q0 = self.E0 / self.omega**2
         self.E = lambda t: self.E0 * self.env(t) * self.laser_E(self.omega * t)
-        self.npoints = int(xp.sum(self.te) * self.nsteps_per_period)
         self.te = self.te * self.T
         self.final_time = xp.sum(self.te)
         self.step = self.T / self.nsteps_per_period
@@ -73,8 +72,6 @@ class TDSE:
             self.Vgrid_ = self.Vgrid.copy()
         elif 'KH' in self.InitialState[1]:
             self.Vgrid_ = self.kh_potential(int(self.InitialState[1][-1]))
-        if self.Method == "HHG":
-            self.hhg = xp.array([]).reshape(0, self.dim)
 
     def eigenstates(self, V:xp.ndarray, k:int, output:str='last'):
         indx = [[xp.abs(self.vecx[_] + self.Lg[_]).argmin(), xp.abs(self.vecx[_] - self.Lg[_]).argmin()] for _ in range(self.dim)]
@@ -180,27 +177,16 @@ class TDSE:
         return xp.sqrt(xp.sum(xp.abs(psi)**2) * xp.prod(self.dx))
 
     def dipole(self, t:float, psi:xp.ndarray) -> xp.ndarray:
-        if self.HHGmethod == 'dipole':
-            D = self.xgrid
-        elif self.HHGmethod == 'acceleration':
-            DVgrid = ifftn(1j * self.kgrid * fftn(self.Vgrid))
-            D = -DVgrid - self.E(t).reshape(self.dim_ext)
-        axis = tuple(range(1, self.dim + 1))
-        return (xp.sum(xp.abs(psi[xp.newaxis])**2 * D, axis=axis) * xp.prod(self.dx)).flatten()
+        dd = xp.squeeze(self.xgrid)
+        DVgrid = ifftn(1j * self.kgrid * fftn(self.Vgrid))
+        da = -DVgrid.real - self.E(t)
+        return (xp.sum(xp.abs(psi)**2 * dd) * xp.prod(self.dx)).flatten(), (xp.sum(xp.abs(psi)**2 * da) * xp.prod(self.dx)).flatten()
 
-    def compute_spectrum(self, t:float, vec:xp.ndarray) -> xp.ndarray:
-        npoints = int(t / self.T * self.nsteps_per_period)
-        print(vec.shape)
-        if npoints:
-            filter = hann(npoints).reshape(-1, 1)
-            print(filter.shape)
-            f_hhg = 2 * xp.pi / t * rfftfreq(npoints, d=1/npoints)
-            if self.HHGmethod == 'acceleration':
-                hhg_spectrum = rfft(vec * filter, axis=0)
-            elif self.HHGmethod == 'dipole':
-                hhg_spectrum = -rfft(vec * filter, axis=0) * f_hhg**2
-            return f_hhg / self.omega, xp.abs(hhg_spectrum)**2
-        return [], []
+    def compute_spectrum(self, t:float, vec:xp.ndarray) -> Tuple[xp.ndarray, xp.ndarray]:
+        npoints = len(vec[0])
+        vec_ = vec * hann(npoints)[xp.newaxis]
+        f_hhg = 2 * xp.pi / t * rfftfreq(npoints, d=1/npoints)
+        return f_hhg / self.omega, [xp.abs(-rfft(vec_[0]) * f_hhg**2)**2, xp.abs(rfft(vec_[1]))**2]
     
     def plot(self, ax, h, t:float, psi:xp.ndarray):
         if self.PlotData:
@@ -211,13 +197,13 @@ class TDSE:
                 elif self.dim == 2:
                     h.set_data(xp.abs(psi_).transpose()**2)
             elif self.Method == 'HHG':
-                self.hhg = xp.vstack((self.hhg, self.dipole(t, psi)))
-                omega, spectrum = self.compute_spectrum(t, self.hhg) 
-                if len(omega):
-                    h.set_xdata(omega)
-                    h.set_ydata(spectrum)
+                freq, spectrum = self.compute_spectrum(t, self.hhg)
+                h[0].set_data((freq[1:], spectrum[0][1:]))
+                h[1].set_data((freq[1:], spectrum[1][1:]))
+                ax.set_xlim((1, max(freq)))
+                ax.set_ylim((min(spectrum[0][1:]), max(spectrum[0][1:])))
             ax.set_title(f'$t / T = {{{t / self.T:.2f}}}$', loc='right', pad=20)
-            plt.pause(1e-4)
+            plt.pause(1e-4)           
 
     def save(self, t:float, psi:xp.ndarray, t_vec, psi_vec:xp.ndarray):
         if self.SaveWaveFunction or self.SaveData:
@@ -239,13 +225,17 @@ class TDSE:
         psi = xp.exp(-1j * Vgrid * h) * psi
         return ifftn(xp.exp(-1j * self.Lap * h) * fftn(psi)) * self.Abs
     
-    def initcond(self) -> Tuple[float, xp.ndarray, float]:
-        num_init = len(xp.atleast_1d(self.InitialState[0]))
-        max_init = max(xp.atleast_1d(self.InitialState[0])) + 1
-        lam, psi, err = self.eigenstates(self.Vgrid_, max_init, output='all' if num_init >= 2 else 'last')
-        psi_ = xp.sum(xp.asarray([self.InitialCoeffs[_] * psi[_] for _ in range(num_init)]), axis=0) / xp.sqrt(num_init) if num_init >= 2 else psi
-        lam_ = float(lam) if num_init == 1 else lam[0]
-        err_ = max(err) if num_init >= 2 else float(err)
+    def initcond(self) -> Tuple[xp.ndarray, float, float]:
+        if isinstance(self.InitialState[0], (int, tuple)):
+            num_init = len(xp.atleast_1d(self.InitialState[0]))
+            max_init = max(xp.atleast_1d(self.InitialState[0])) + 1
+            lam, psi, err = self.eigenstates(self.Vgrid_, max_init, output='all' if num_init >= 2 else 'last')
+            psi_ = xp.sum(xp.asarray([self.InitialCoeffs[_] * psi[_] for _ in range(num_init)]), axis=0) / xp.sqrt(num_init) if num_init >= 2 else psi
+            lam_ = float(lam) if num_init == 1 else lam[0]
+            err_ = max(err) if num_init >= 2 else float(err)
+        elif isinstance(self.InitialState[0], type(lambda:0)):
+            psi_ = xp.squeeze(self.InitialState[0](self.xgrid))
+            lam_, err_ = [], []
         if 'KH' in self.InitialState[1]:
-            psi_ = self.lab2kh(psi_, 0, order=int(self.InitialState[1][-1]), dir=-1)
-        return lam_, psi_, err_
+            psi_ = self.lab2kh(psi_, 0, order=int(self.InitialState[1][-1]), dir=-1)  
+        return psi_, lam_, err_

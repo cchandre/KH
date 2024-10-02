@@ -80,17 +80,22 @@ def run_method(self):
 	elif self.Method in ['wavefunction', 'HHG', 'ionization']:
 		plt.ion()
 		start = time.time()
-		lam0, psi0, err = self.initcond()
-		print(f'\033[90m        Computation of the initial state finished in {int(time.time() - start)} seconds: E0 = {lam0:.6f} (with err = {err:.2e}) \033[00m')
-		if self.dim >= 2:
-			print(f'\033[90m                   with quantum number(s):  L = {self.quantum_numbers(psi0)} \033[00m')
+		psi0, lam0, err = self.initcond()
+		if isinstance(self.InitialState[0], (int, tuple)):
+			print(f'\033[90m        Computation of the initial state finished in {int(time.time() - start)} seconds: E0 = {lam0:.6f} (with err = {err:.2e}) \033[00m')
+			if self.dim >= 2:
+				print(f'\033[90m                   with quantum number(s):  L = {self.quantum_numbers(psi0)} \033[00m')
 		init_density = self.norm(psi0)**2
 		if self.PlotData:
 			fig, ax, h = display_axes(self, self.change_frame(0, psi0), type=self.Method)
+		else:
+			fig, ax, h = [], [], []
 
 		start = time.time()
 
 		def plot_command(t:float, psi:xp.ndarray) -> None:
+			if self.Method == 'HHG':
+				self.hhg = xp.concatenate((self.hhg, self.dipole(t, psi)), axis=1) if hasattr(self, 'hhg') else xp.asarray(self.dipole(t, psi))
 			n = int(t / self.step)
 			if (n+1)%self.refresh == 0:
 				self.plot(ax, h, t, psi)
@@ -98,7 +103,7 @@ def run_method(self):
 		tspan = xp.linspace(0, self.final_time, int(self.ncycles * self.nsteps_per_period // self.refresh))
 		sol = solve_ivp_symp(self.chi, self.chi_star, (0, self.final_time), psi0, step=self.step, t_eval=tspan, method=self.ode_solver, command=lambda t, psi:plot_command(t, psi))
 		print(f'\033[90m        Computation finished in {int(time.time() - start)} seconds \033[00m')
-		save_data(self, xp.array([sol.t, sol.y], dtype=xp.object_), filestr)
+		save_data(self, xp.array([sol.t, sol.y], dtype=xp.object_), filestr)	
 
 		if self.SaveWaveFunction:
 			def animate(_):
@@ -164,9 +169,11 @@ def display_axes(self, data, type:str='wavefunction'):
 		ax.set_xlabel('$x/q$')
 	elif type == 'HHG':
 		fig, ax = plt.subplots(figsize=(8, 4))
-		fig.canvas.manager.set_window_title(f'TDSE simulation: {type}')
-		h, = ax.plot([], [], cs[1], linewidth=2, label=r'HHG')
+		fig.canvas.manager.set_window_title(f'TDSE simulation: HHG spectrum')
+		h = ax.plot([], [], cs[2], linewidth=2, label=r'dipole')[0], ax.plot([], [], cs[3], linewidth=2, label=r'acceleration')[0]
 		ax.set_xlabel('$\omega /\omega_\mathrm{field}$')
+		ax.set_yscale('log')
+		ax.legend(loc='upper right', labelcolor='linecolor')
 	return fig, ax, h
 
 def save_data(self, data:xp.ndarray, filestr:str, info=[]) -> None:
