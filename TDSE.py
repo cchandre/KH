@@ -88,8 +88,6 @@ def run_method(self):
 		init_density = self.norm(psi0)**2
 		if self.PlotData:
 			fig, ax, h = display_axes(self, self.change_frame(0, psi0), type=self.Method)
-		else:
-			fig, ax, h = [], [], []
 
 		start = time.time()
 
@@ -97,8 +95,9 @@ def run_method(self):
 			if self.Method == 'HHG':
 				self.hhg = xp.concatenate((self.hhg, self.dipole(t, psi)), axis=1) if hasattr(self, 'hhg') else xp.asarray(self.dipole(t, psi))
 			n = int(t / self.step)
-			if (n+1)%self.refresh == 0:
-				self.plot(ax, h, t, psi)
+			if (n+1)%self.refresh == 0 and self.PlotData:
+				vec = psi if self.Method in ['wavefunction', 'ionization'] else (self.hhg if self.Method == 'HHG' else [])
+				self.plot(ax, h, t, vec)
 		
 		tspan = xp.linspace(0, self.final_time, int(self.ncycles * self.nsteps_per_period // self.refresh))
 		sol = solve_ivp_symp(self.chi, self.chi_star, (0, self.final_time), psi0, step=self.step, t_eval=tspan, method=self.ode_solver, command=lambda t, psi:plot_command(t, psi))
@@ -106,8 +105,10 @@ def run_method(self):
 		save_data(self, xp.array([sol.t, sol.y], dtype=xp.object_), filestr)	
 
 		if self.SaveWaveFunction:
+			fig, ax, h = display_axes(self, self.change_frame(0, psi0), type=self.Method)
 			def animate(_):
-				self.plot(ax, h, sol.t[_], sol.y[..., _])
+				vec = sol.y[..., _] if self.Method in ['wavefunction', 'ionization'] else (self.hhg[:, :_] if self.Method == 'HHG' else [])
+				self.plot(ax, h, sol.t[_], vec)
 				return h
 			FuncAnimation(fig, animate, frames=len(sol.t), interval=200).save(filestr + '.gif', writer=PillowWriter(fps=5), dpi=self.dpi)
 			print(f'\033[90m        Animation saved in {filestr}.gif \033[00m')
@@ -148,7 +149,7 @@ def display_axes(self, data, type:str='wavefunction'):
 				ax.set_xlabel('$x$')
 				ax.set_ylabel('$y$')
 				plt.colorbar(im)
-	elif type == 'wavefunction':
+	elif type in ['wavefunction', 'ionization']:
 		fig, ax = plt.subplots(figsize=(8, 4))
 		fig.canvas.manager.set_window_title(f'TDSE simulation: {type}')
 		if self.dim == 1:

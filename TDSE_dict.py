@@ -25,7 +25,7 @@ Lg = 200
 nsteps_per_period = 1e3
 scale = 'linear'
 
-SaveWaveFunction = False
+SaveWaveFunction = True
 PlotData = True
 SaveData = False
 dpi = 300

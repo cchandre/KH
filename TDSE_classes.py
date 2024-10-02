@@ -188,22 +188,23 @@ class TDSE:
         f_hhg = 2 * xp.pi / t * rfftfreq(npoints, d=1/npoints)
         return f_hhg / self.omega, [xp.abs(-rfft(vec_[0]) * f_hhg**2)**2, xp.abs(rfft(vec_[1]))**2]
     
-    def plot(self, ax, h, t:float, psi:xp.ndarray):
-        if self.PlotData:
-            if self.Method == 'wavefunction':
-                psi_ = self.change_frame(t, psi)
-                if self.dim == 1:
-                    h.set_ydata(xp.abs(psi_)**2)
-                elif self.dim == 2:
-                    h.set_data(xp.abs(psi_).transpose()**2)
-            elif self.Method == 'HHG':
-                freq, spectrum = self.compute_spectrum(t, self.hhg)
+    def plot(self, ax, h, t:float, vec:xp.ndarray):
+        if self.Method in ['wavefunction', 'ionization']:
+            psi = self.change_frame(t, vec)
+            if self.dim == 1:
+                h.set_ydata(xp.abs(psi)**2)
+            elif self.dim == 2:
+                h.set_data(xp.abs(psi).transpose()**2)
+        elif self.Method == 'HHG':
+            if t > 0:
+                freq, spectrum = self.compute_spectrum(t, vec)
                 h[0].set_data((freq[1:], spectrum[0][1:]))
                 h[1].set_data((freq[1:], spectrum[1][1:]))
                 ax.set_xlim((1, max(freq)))
-                ax.set_ylim((min(spectrum[0][1:]), max(spectrum[0][1:])))
-            ax.set_title(f'$t / T = {{{t / self.T:.2f}}}$', loc='right', pad=20)
-            plt.pause(1e-4)           
+                if spectrum[0]:
+                    ax.set_ylim((min(spectrum[0][1:]), max(spectrum[0][1:])))
+        ax.set_title(f'$t / T = {{{t / self.T:.2f}}}$', loc='right', pad=20)
+        plt.pause(1e-4)           
 
     def save(self, t:float, psi:xp.ndarray, t_vec, psi_vec:xp.ndarray):
         if self.SaveWaveFunction or self.SaveData:
