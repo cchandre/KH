@@ -26,13 +26,13 @@ i \frac{\partial \psi}{\partial t} = \left( -\frac{\Delta}{2} + V(x) + x E(t) \r
 ```
 where $E(t)=E_0 f(t) \Phi(\omega t)$ with $f(t)$ the laser envelope, and $\Phi$ a $2\pi$-periodic function. The frequency $\omega$ is defined by the laser wavelength, and the amplitude of the electric field $E_0$ is defined by the laser intensity. Here $V$ is the ionic potential. 
 
-- [`TDSE_dict.py`](https://github.com/cchandre/KH/blob/main/TDSE_dict.py): to be edited to change the parameters of the TDSE computation (see below for a dictionary of parameters)
+- [`TDSE_params.py`](https://github.com/cchandre/KH/blob/main/TDSE_params.py): to be edited to change the parameters of the TDSE computation (see below for a list of parameters)
 
 - [`TDSE_classes.py`](https://github.com/cchandre/KH/blob/main/TDSE_classes.py): contains the TDSE class and main functions
 
 - [`TDSE.py`](https://github.com/cchandre/KH/blob/main/TDSE.py): contains the methods to execute TDSE
 
-Once [`TDSE_dict.py`](https://github.com/cchandre/KH/blob/main/TDSE_dict.py) has been edited with the relevant parameters, run the file as 
+Once [`TDSE_params.py`](https://github.com/cchandre/KH/blob/main/TDSE_params.py) has been edited with the relevant parameters, run the file as 
 ```sh
 python3 TDSE.py
 ```
@@ -42,7 +42,7 @@ nohup python3 -u TDSE.py &>TDSE.out < /dev/null &
 ```
 The list of Python packages and their version are specified in [`requirements.txt`](https://github.com/cchandre/KH/blob/main/requirements.txt)
 
-##  Parameter dictionary
+##  Parameters
 
 - *Method*: string; 'eigenstates', 'wavefunction', 'HHG', 'ionization'; choice of method
   - 'eigenstates': plot the first *k* eigenstates and eigenvalues of the potential specified in *InitialState[1]*, where *k* is equal to *InitialState[0]*+1
@@ -75,7 +75,7 @@ The list of Python packages and their version are specified in [`requirements.tx
 - *refresh*: integer; the wavefunction is displayed every *refresh* time steps
 - *darkmode*: boolean; if True, plots are done in dark mode
 ####
-The following options may be changed from default values in [`TDSE_dict.py`](https://github.com/cchandre/KH/blob/main/TDSE_dict.py):
+The following options may be changed from default values in [`TDSE_params.py`](https://github.com/cchandre/KH/blob/main/TDSE_params.py):
 - *tol*: relative accuracy for eigenvalues (stopping criterion) (default=10<sup>-10</sup>, 0 implies machine precision); see [eigsh](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.eigsh.html)
 - *maxiter*: maximum number of Arnoldi update iterations allowed (default=1000); see [eigsh](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.eigsh.html)
 - *ncv*: number of Lanczos vectors generated (default=100); see [eigsh](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.eigsh.html)
