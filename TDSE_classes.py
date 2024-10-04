@@ -36,7 +36,7 @@ import TDSE_params
 
 def generate_dict(self) -> dict:
     L, N = xp.atleast_1d(self.L), xp.atleast_1d(self.N)
-    Lg = self.Lg if hasattr(self, 'Lg') else self.L.copy()
+    Lg = self.Lg if hasattr(self, 'Lg') else L.copy()
     delta, Lg = xp.atleast_1d(self.delta), xp.atleast_1d(Lg)
     laser_E_ = lambda phi: xp.atleast_1d(self.laser_E(phi))
     if not len(L) == len(N) == len(laser_E_(0)):
@@ -155,8 +155,13 @@ class TDSE:
             err = xp.zeros(k)
             for _ in range(k):
                 psi[_][tuple(ixgrid)] = v[:, _].reshape(Ng) / self.norm(v[:, _].reshape(Ng))
-                err[_] = xp.abs(xp.sum(psi[_] * (ifftn(self.Lap * fftn(psi[_])) + V * psi[_] - lam[_] * psi[_])) * xp.prod(self.dx))
+                err[_] = xp.abs(xp.sum(psi[_].conj() * (ifftn(self.Lap * fftn(psi[_])) + V * psi[_] - lam[_] * psi[_])) * xp.prod(self.dx))
             return lam, psi, err
+        
+    def compute_Ip(self):
+        psi = self.eigenstates(self.Vgrid, 1)[1]
+        Ip = xp.sum(psi.conj() * (ifftn(self.Lap * fftn(psi)) + self.Vgrid * psi)) * xp.prod(self.dx)
+        return -Ip.real
 
     def quantum_numbers(self, psi:xp.ndarray) -> List[float]:
         axis = tuple(range(1, self.dim + 1))

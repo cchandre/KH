@@ -176,6 +176,7 @@ def display_axes(self, data, type:str='wavefunction'):
 		fig, ax = plt.subplots(figsize=(8, 4))
 		fig.canvas.manager.set_window_title(f'TDSE simulation: HHG spectrum')
 		h = ax.plot([], [], cs[2], linewidth=2, label=r'dipole')[0], ax.plot([], [], cs[3], linewidth=2, label=r'acceleration')[0]
+		ax.axvline(x= (3.17 * self.Up + self.compute_Ip()) / self.omega, color='k', linewidth=2, label=r'$3.17 U_p + I_p$')
 		ax.set_xlabel('$\omega /\omega_\mathrm{field}$')
 		ax.set_yscale('log')
 		ax.legend(loc='upper right', labelcolor='linecolor')
