@@ -70,7 +70,7 @@ The list of Python packages and their version are specified in [`requirements.tx
 - *scale*: string; 'linear' or 'log'; the axis scale type to apply for the representation of the wavefunction (if *Method*='wavefunction')
 - *legend*: (optional); string; location of the legend; for more details, see [matplotlib legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html)
 - *xlim*: (optional); tuple of floats; x-axis view limits (in atomic units)
-- *ylim*: (optional); tuple of floats; y-axis view limits (in atomic units)
+- *ylim*: (optional); tuple of floats or string; y-axis view limits (in atomic units); if 'auto', let the y-axis scale automatically
 - *SaveWaveFunction*: boolean; if True, saves the animation of the wavefunction  as an animated `.gif` image
 - *PlotData*: boolean; if True, displays the wavefunction on the screen as time increases (only for 1D and 2D)
 - *SaveData*: boolean; if True, the time evolution of the wave function are saved in a `.mat` file
