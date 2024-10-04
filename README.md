@@ -59,13 +59,13 @@ The list of Python packages and their version are specified in [`requirements.tx
 - *te*: array of 3 floats; duration of the ramp-up, plateau and ramp-down in laser cycles
 - *V*: lambda function; ionic potential
 - *InitialState*: integer or array [integer or tuple of integers or lambda function, string]; integer = index of the initial eigenstate (0 corresponds to the ground state, 1 is the first excited state...); string = potential with which the initial state is computed ('V', 'VKH2' or 'VKH3'); in case a tuple of integers is entered, the initial state is a linear combination of the various states in the tuple with the coefficients given in *InitialCoeffs*; if *InitialState* or *InitialState*[0] is a lambda function, the initial state is computed on the grid using this function
-- *InitialCoeffs*: array of floats; the initial state is a linear combination of eigenstates $\Psi_k(x)$ of the potential defined in *InitialState*[1], i.e., $\psi(x,0)=\sum_k c_k \Psi_k(x)$ where $k$ belongs to *InitialState*[0]
+- *InitialCoeffs*: (optional); array of floats; the initial state is a linear combination of eigenstates $\Psi_k(x)$ of the potential defined in *InitialState*[1], i.e., $\psi(x,0)=\sum_k c_k \Psi_k(x)$ where $k$ belongs to *InitialState*[0]; if not specified, the coefficients are equal to 1
 - *DisplayCoord*: string; 'lab', 'KH2' or 'KH3'; if KH (Kramers-Henneberger), the wave function is moved to the KH frame (for display and for saving) of order 2 or 3
 ####
 - *L*: array of *n* floats; size of the box in each direction
 - *N*: array of *n* integers; number of points in each direction
 - *delta*: float or array of *n* floats; size of the absorbing boundary in each direction (if float, the size is taken equal in all dimensions)
-- *Lg*: float or array of *n* floats; size of the box for the initial computation of the initial state along each dimension; if float, [-*Lg*, *Lg*] in each dimension
+- *Lg*: (optional) float or array of *n* floats; size of the box for the initial computation of the initial state along each dimension; if float, [-*Lg*, *Lg*] in each dimension; if not specified, *Lg*=*L*
 - *nsteps_per_period*: integer; number of steps per laser period for the integration; the time-step is then defined as 2&pi; /&omega; / *nsteps_per_period*
 - *scale*: string; 'linear' or 'log'; the axis scale type to apply for the representation of the wavefunction (if *Method*='wavefunction')
 - *SaveWaveFunction*: boolean; if True, saves the animation of the wavefunction  as an animated `.gif` image
