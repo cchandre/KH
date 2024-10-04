@@ -60,7 +60,7 @@ The list of Python packages and their version are specified in [`requirements.tx
 - *V*: lambda function; ionic potential
 - *InitialState*: integer or array [integer or tuple of integers or lambda function, string]; integer = index of the initial eigenstate (0 corresponds to the ground state, 1 is the first excited state...); string = potential with which the initial state is computed ('V', 'VKH2' or 'VKH3'); in case a tuple of integers is entered, the initial state is a linear combination of the various states in the tuple with the coefficients given in *InitialCoeffs*; if *InitialState* or *InitialState*[0] is a lambda function, the initial state is computed on the grid using this function
 - *InitialCoeffs*: (optional); array of floats; the initial state is a linear combination of eigenstates $\Psi_k(x)$ of the potential defined in *InitialState*[1], i.e., $\psi(x,0)=\sum_k c_k \Psi_k(x)$ where $k$ belongs to *InitialState*[0]; if not specified, the coefficients are equal to 1
-- *DisplayCoord*: string; 'lab', 'KH2' or 'KH3'; if KH (Kramers-Henneberger), the wave function is moved to the KH frame (for display and for saving) of order 2 or 3
+- *DisplayCoord*: (optional); string; 'lab', 'KH2' or 'KH3'; if KH (Kramers-Henneberger), the wave function is moved to the KH frame (for display and for saving) of order 2 or 3; if not specified, 'lab' is the default
 ####
 - *L*: array of *n* floats; size of the box in each direction
 - *N*: array of *n* integers; number of points in each direction
