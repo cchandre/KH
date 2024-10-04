@@ -252,13 +252,13 @@ class TDSE:
         f_hhg = 2 * xp.pi / t * rfftfreq(npoints, d=1/npoints)
         return f_hhg / self.omega, [xp.abs(-rfft(vec_[0]) * f_hhg**2)**2, xp.abs(rfft(vec_[1]))**2]
     
-    def plot(self, ax, h, t:float, vec:xp.ndarray):
+    def plot(self, ax, h, t:float, vec:xp.ndarray) -> None:
         if self.Method in ['wavefunction', 'ionization']:
             psi = self.change_frame(t, vec)
             if self.dim == 1:
                 h.set_ydata(xp.abs(psi)**2)
                 if hasattr(self, 'ylim') and self.ylim == 'auto':
-                    ax.set_ylim((0, max(xp.abs(psi)**2)))
+                    ax.set_ylim((0, 1.1 * max(xp.abs(psi)**2)))
             elif self.dim == 2:
                 h.set_data(xp.abs(psi).transpose()**2)
         elif self.Method == 'HHG':

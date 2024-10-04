@@ -55,11 +55,8 @@ plt.rc('lines', linewidth=3)
 plt.rc('image', cmap='bwr')
 
 def main() -> None:
-    self = TDSE()
-    print(f'\033[92m  {self} \033[00m')
-    run_method(self)
-
-def run_method(self):
+	self = TDSE()
+	print(f'\033[92m  {self} \033[00m')
 	filestr = type(self).__name__ + '_' + time.strftime('%Y%m%d_%H%M')
 	if self.Method == 'eigenstates':
 		start = time.time()
