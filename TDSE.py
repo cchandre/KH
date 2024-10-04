@@ -37,7 +37,7 @@ import warnings
 import time
 from datetime import date
 from TDSE_classes import TDSE
-from TDSE_dict import dict_, darkmode
+from TDSE_params import darkmode
 
 if darkmode:
 	cs = ['k', 'w', 'c', 'm', 'r']
@@ -55,7 +55,7 @@ plt.rc('lines', linewidth=3)
 plt.rc('image', cmap='bwr')
 
 def main() -> None:
-    self = TDSE(dict_)
+    self = TDSE()
     print(f'\033[92m  {self} \033[00m')
     run_method(self)
 

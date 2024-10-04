@@ -32,16 +32,68 @@ from scipy.interpolate import interp1d
 from scipy.signal.windows import hann
 import scipy.sparse.linalg as la
 from typing import Tuple, List
+import TDSE_params
+
+def generate_dict(self) -> dict:
+    L, N = xp.atleast_1d(self.L), xp.atleast_1d(self.N)
+    delta, Lg = xp.atleast_1d(self.delta), xp.atleast_1d(self.Lg)
+    laser_E_ = lambda phi: xp.atleast_1d(self.laser_E(phi))
+    if not len(L) == len(N) == len(laser_E_(0)):
+        raise ValueError('Dimension of variables in dictionary not compatible')
+    if not len(delta) == len(L):
+        delta = delta[0] * xp.ones_like(L)
+    if not len(Lg) == len(L):
+        Lg = Lg[0] * xp.ones_like(L)
+    if isinstance(self.InitialState, (int, tuple, type(lambda:0))):
+        self.InitialState = [self.InitialState, 'V']
+    if not hasattr(self, 'InitialCoeffs') and isinstance(self.InitialState[0], (int, tuple)):
+        self.InitialCoeffs = xp.ones_like(self.InitialState[0])
+    dict_ = {
+            'Method': self.Method,
+            'laser_intensity': self.laser_intensity,
+            'laser_wavelength': self.laser_wavelength,
+            'envelope': self.laser_envelope,
+            'laser_E': laser_E_,
+            'te': xp.asarray(self.te),
+            'nsteps_per_period': self.nsteps_per_period,
+            'dim': len(L),
+            'ncycles': xp.asarray(self.te).sum(),
+            'scale': self.scale,
+            'V': self.V,
+            'InitialState': self.InitialState,
+            'DisplayCoord': self.DisplayCoord if hasattr(self, 'DisplayCoord') else 'V',
+            'Lg': Lg,
+            'L': L,
+            'N': N,
+            'delta': delta,
+            'PlotData': self.PlotData,
+            'SaveWaveFunction': self.SaveWaveFunction,
+            'refresh': self.refresh,
+            'SaveData': self.SaveData,
+            'dpi': self.dpi}
+    if hasattr(self, 'InitialCoeffs'):
+        dict_.update({'InitialCoeffs': self.InitialCoeffs})
+    if not hasattr(self, 'Nkh'):
+        dict_.update({'Nkh': 2**12})
+    if not hasattr(self, 'ode_solver'):
+        dict_.update({'ode_solver': 'BM4'})    
+    if not hasattr(self, 'tol'):
+        dict_.update({'tol': 1e-10}) 
+    if not hasattr(self, 'maxiter'):
+        dict_.update({'maxiter': 1000})
+    if not hasattr(self, 'ncv'):
+        dict_.update({'ncv': 100})
+    return dict_
 
 class TDSE:
-
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self.DictParams})'
 
     def __str__(self) -> str:
         return f'Time-dependent Schrödinger equation ({self.__class__.__name__})'
 
-    def __init__(self, dict_:dict) -> None:
+    def __init__(self) -> None:
+        dict_ = generate_dict(TDSE_params)
         for key in dict_:
             setattr(self, key, dict_[key])
         self.DictParams = dict_
@@ -201,7 +253,7 @@ class TDSE:
                 h[0].set_data((freq[1:], spectrum[0][1:]))
                 h[1].set_data((freq[1:], spectrum[1][1:]))
                 ax.set_xlim((1, max(freq)))
-                if spectrum[0]:
+                if xp.any(spectrum[0]):
                     ax.set_ylim((min(spectrum[0][1:]), max(spectrum[0][1:])))
         ax.set_title(f'$t / T = {{{t / self.T:.2f}}}$', loc='right', pad=20)
         plt.pause(1e-4)           
