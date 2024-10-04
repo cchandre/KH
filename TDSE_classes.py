@@ -257,6 +257,8 @@ class TDSE:
             psi = self.change_frame(t, vec)
             if self.dim == 1:
                 h.set_ydata(xp.abs(psi)**2)
+                if hasattr(self, 'ylim') and self.ylim == 'auto':
+                    ax.set_ylim((0, max(xp.abs(psi)**2)))
             elif self.dim == 2:
                 h.set_data(xp.abs(psi).transpose()**2)
         elif self.Method == 'HHG':
@@ -282,11 +284,11 @@ class TDSE:
     
     def chi(self, h:float, t:float, psi:xp.ndarray) -> xp.ndarray:
         psi = ifftn(xp.exp(-1j * self.Lap * h) * fftn(psi))
-        Vgrid = self.Vgrid + xp.einsum('i...,i...->...',self.xgrid, self.E(t).reshape(self.dim_ext))
+        Vgrid = self.Vgrid + xp.einsum('i...,i...->...', self.xgrid, self.E(t).reshape(self.dim_ext))
         return xp.exp(-1j * Vgrid * h) * psi * self.Abs
     
     def chi_star(self, h:float, t:float, psi:xp.ndarray) -> xp.ndarray:
-        Vgrid = self.Vgrid + xp.einsum('i...,i...->...',self.xgrid, self.E(t).reshape(self.dim_ext))
+        Vgrid = self.Vgrid + xp.einsum('i...,i...->...', self.xgrid, self.E(t).reshape(self.dim_ext))
         psi = xp.exp(-1j * Vgrid * h) * psi
         return ifftn(xp.exp(-1j * self.Lap * h) * fftn(psi)) * self.Abs
     

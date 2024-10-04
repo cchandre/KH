@@ -149,6 +149,7 @@ def display_axes(self, data, type:str='wavefunction'):
 				ax.set_xlabel('$x$')
 				ax.set_ylabel('$y$')
 				plt.colorbar(im)
+		return fig, ax
 	elif type in ['wavefunction', 'ionization']:
 		fig, ax = plt.subplots(figsize=(8, 4))
 		fig.canvas.manager.set_window_title(f'TDSE simulation: {type}')
@@ -157,7 +158,7 @@ def display_axes(self, data, type:str='wavefunction'):
 			h, = ax.plot(self.xgrid[0] / self.q0, xp.abs(data)**2, cs[1], linewidth=2, label=r'$\vert\psi (x,t)\vert^2$')
 			ax.set_yscale(self.scale)
 			ax.legend(loc=self.legend if hasattr(self, 'legend') else 'best', labelcolor='linecolor')
-			if hasattr(self, 'ylim'):
+			if hasattr(self, 'ylim') and (self.ylim != 'auto'):
 				ax.set_ylim(self.ylim)
 			if hasattr(self, 'xlim'):
 				ax.set_xlim((self.xlim[0] / self.q0, self.xlim[1]/self.q0))
