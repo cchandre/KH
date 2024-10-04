@@ -65,9 +65,12 @@ The list of Python packages and their version are specified in [`requirements.tx
 - *L*: array of *n* floats; size of the box in each direction
 - *N*: array of *n* integers; number of points in each direction
 - *delta*: float or array of *n* floats; size of the absorbing boundary in each direction (if float, the size is taken equal in all dimensions)
-- *Lg*: (optional) float or array of *n* floats; size of the box for the initial computation of the initial state along each dimension; if float, [-*Lg*, *Lg*] in each dimension; if not specified, *Lg*=*L*
+- *Lg*: (optional); float or array of *n* floats; size of the box for the initial computation of the initial state along each dimension; if float, [-*Lg*, *Lg*] in each dimension; if not specified, *Lg*=*L*
 - *nsteps_per_period*: integer; number of steps per laser period for the integration; the time-step is then defined as 2&pi; /&omega; / *nsteps_per_period*
 - *scale*: string; 'linear' or 'log'; the axis scale type to apply for the representation of the wavefunction (if *Method*='wavefunction')
+- *legend*: (optional); string; location of the legend; for more details, see [matplotlib legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html)
+- *xlim*: (optional); tuple of floats; x-axis view limits (in atomic units)
+- *ylim*: (optional); tuple of floats; y-axis view limits (in atomic units)
 - *SaveWaveFunction*: boolean; if True, saves the animation of the wavefunction  as an animated `.gif` image
 - *PlotData*: boolean; if True, displays the wavefunction on the screen as time increases (only for 1D and 2D)
 - *SaveData*: boolean; if True, the time evolution of the wave function are saved in a `.mat` file
