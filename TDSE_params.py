@@ -5,30 +5,29 @@ import numpy as xp
 
 Method = 'wavefunction'
 
-laser_intensity = 1e15
+laser_intensity = 7.5e13
 laser_wavelength = 780
 laser_envelope = 'const'
-laser_E = lambda phi: -xp.sin(phi)
+laser_E = lambda phi: [xp.sin(phi), 0]
 te = [1, 2, 1]
 
 a = 5
 V = lambda r: -1 / xp.sqrt(r**2 + a**2)
 InitialState = [(0, 1), 'VKH2']
 InitialCoeffs = (1, -1)
-DisplayCoord = 'VKH2'
+DisplayCoord = 'KH2'
 
-L = 200
-N = 2**12
-delta = 30
-Lg = 200
+L = [100, 50]
+N = [2**10, 2**8]
+delta = [10, 5]
 
 nsteps_per_period = 1e3
-scale = 'linear'
+scale = 'log'
 
-SaveWaveFunction = False
+SaveWaveFunction = True
 PlotData = True
 SaveData = False
 dpi = 300
 refresh = 50
 
-darkmode = True
+darkmode = False

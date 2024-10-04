@@ -156,9 +156,13 @@ def display_axes(self, data, type:str='wavefunction'):
 			ax.plot(self.xgrid[0] / self.q0, xp.abs(data)**2, cs[2], linewidth=1, label=r'$\vert\psi (x,0)\vert^2$')
 			h, = ax.plot(self.xgrid[0] / self.q0, xp.abs(data)**2, cs[1], linewidth=2, label=r'$\vert\psi (x,t)\vert^2$')
 			ax.set_yscale(self.scale)
-			ax.legend(loc='upper right', labelcolor='linecolor')
-			#ax.set_ylim((-0.003, 0.07))
-			ax.set_xlim((-self.L[0] / self.q0, self.L[0]/self.q0))
+			ax.legend(loc=self.legend if hasattr(self, 'legend') else 'best', labelcolor='linecolor')
+			if hasattr(self, 'ylim'):
+				ax.set_ylim(self.ylim)
+			if hasattr(self, 'xlim'):
+				ax.set_xlim((self.xlim[0] / self.q0, self.xlim[1]/self.q0))
+			else:
+				ax.set_xlim((-self.L[0] / self.q0, self.L[0]/self.q0))
 			ax.set_aspect('auto')
 			plt.tight_layout(pad=2)
 		elif self.dim == 2:

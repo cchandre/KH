@@ -36,7 +36,8 @@ import TDSE_params
 
 def generate_dict(self) -> dict:
     L, N = xp.atleast_1d(self.L), xp.atleast_1d(self.N)
-    delta, Lg = xp.atleast_1d(self.delta), xp.atleast_1d(self.Lg)
+    Lg = self.Lg if hasattr(self, 'Lg') else self.L.copy()
+    delta, Lg = xp.atleast_1d(self.delta), xp.atleast_1d(Lg)
     laser_E_ = lambda phi: xp.atleast_1d(self.laser_E(phi))
     if not len(L) == len(N) == len(laser_E_(0)):
         raise ValueError('Dimension of variables in dictionary not compatible')
@@ -61,7 +62,7 @@ def generate_dict(self) -> dict:
             'scale': self.scale,
             'V': self.V,
             'InitialState': self.InitialState,
-            'DisplayCoord': self.DisplayCoord if hasattr(self, 'DisplayCoord') else 'V',
+            'DisplayCoord': self.DisplayCoord if hasattr(self, 'DisplayCoord') else 'lab',
             'Lg': Lg,
             'L': L,
             'N': N,
@@ -71,6 +72,12 @@ def generate_dict(self) -> dict:
             'refresh': self.refresh,
             'SaveData': self.SaveData,
             'dpi': self.dpi}
+    if hasattr(self, 'legend'):
+        dict_.update({'legend': self.legend})
+    if hasattr(self, 'xlim'):
+        dict_.update({'xlim': self.xlim})   
+    if hasattr(self, 'ylim'):
+        dict_.update({'ylim': self.ylim})
     if hasattr(self, 'InitialCoeffs'):
         dict_.update({'InitialCoeffs': self.InitialCoeffs})
     if not hasattr(self, 'Nkh'):
