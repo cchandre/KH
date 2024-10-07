@@ -51,7 +51,7 @@ The file [`TDSE_params.py`](https://github.com/cchandre/KH/blob/main/TDSE_params
   - 'wavefunction': displays the wavefunction as a function of time obtained by integrating the TDSE equation
   - 'HHG': compute the high-harmonic generation (HHG) spectrum as a function of time 
   - 'ionization': computes the ionization probability as well as displaying the wavefunction as a function of time
-  - 'Husimi': computes the Husimi representation of the wavefunction as a function of time
+  - 'Husimi': computes the Husimi representation of the wavefunction as a function of time; 'p_husimi' and 'sigma_husimi' need to be defined
 - *laser_intensity*: float; intensity of the laser field in W cm<sup>-2</sup>
 - *laser_wavelength*: float; wavelength of the laser field in nm
 - *laser_E*: lambda function returning an array of *n* floats; *n* components (where *n* is the dimension of configuration space) of the electric field (dipole approximation); the electric field is then given by *E0* * *laser_envelope*(t) * *laser_E*(&omega; t) where *E0* = sqrt(*laser_intensity*)
