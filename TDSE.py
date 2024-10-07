@@ -37,8 +37,9 @@ import warnings
 import time
 from datetime import date
 from TDSE_classes import TDSE
-from TDSE_params import darkmode
+import TDSE_params 
 
+darkmode = TDSE_params.darkmode if hasattr(TDSE_params, 'darkmode') else False
 if darkmode:
 	cs = ['k', 'w', 'c', 'm', 'r']
 else:
@@ -74,7 +75,7 @@ def main() -> None:
 				L, Lz = self.quantum_numbers(psi[_])
 				message += f' with L = {L:.2f} and Lz = {Lz:.2f} \033[00m'
 			print(message + ' \033[00m')
-	elif self.Method in ['wavefunction', 'HHG', 'ionization']:
+	elif self.Method in ['wavefunction', 'HHG', 'ionization', 'Husimi']:
 		plt.ion()
 		start = time.time()
 		psi0, lam0, err = self.initcond()
@@ -93,7 +94,10 @@ def main() -> None:
 				self.hhg = xp.concatenate((self.hhg, self.dipole(t, psi)), axis=1) if hasattr(self, 'hhg') else xp.asarray(self.dipole(t, psi))
 			n = int(t / self.step)
 			if (n+1)%self.refresh == 0 and self.PlotData:
-				vec = psi if self.Method in ['wavefunction', 'ionization'] else (self.hhg if self.Method == 'HHG' else [])
+				if self.Method in ['wavefunction', 'Husimi', 'ionization']:
+					vec = psi
+				elif self.Method == 'HHG':
+					vec = self.hhg
 				self.plot(ax, h, t, vec)
 		
 		tspan = xp.linspace(0, self.final_time, int(self.ncycles * self.nsteps_per_period // self.refresh))
@@ -178,6 +182,15 @@ def display_axes(self, data, type:str='wavefunction'):
 		ax.set_xlabel('$\omega /\omega_\mathrm{field}$')
 		ax.set_yscale('log')
 		ax.legend(loc='upper right', labelcolor='linecolor')
+	elif type == 'Husimi':
+		p0 = self.omega / self.E0
+		hrepr = self.compute_husimi(data, self.p_husimi, self.sigma_husimi)
+		fig, ax = plt.subplots(figsize=(8, 4))
+		fig.canvas.manager.set_window_title(f'TDSE simulation: Husimi representation')
+		h = ax.imshow(hrepr.transpose(), extent=(-self.L[0] / self.q0, self.L[0] / self.q0, self.p_husimi.min() / p0, self.p_husimi.max() / p0), cmap=cmap_psi, interpolation='nearest')
+		fig.colorbar(h, ax=ax, shrink=0.5)
+		ax.set_xlabel('$x/q$')
+		ax.set_ylabel('$\omega p / E_0$')
 	return fig, ax, h
 
 def save_data(self, data:xp.ndarray, filestr:str, info=[]) -> None:

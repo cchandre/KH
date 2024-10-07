@@ -35,61 +35,47 @@ from typing import Tuple, List
 import TDSE_params
 
 def generate_dict(self) -> dict:
-    L, N = xp.atleast_1d(self.L), xp.atleast_1d(self.N)
-    Lg = self.Lg if hasattr(self, 'Lg') else L.copy()
-    delta, Lg = xp.atleast_1d(self.delta), xp.atleast_1d(Lg)
+    dict_ = dict()
+    compulsory_params = ['Method', 'laser_intensity', 'laser_wavelength', 'laser_E', 'V', 'InitialState', 'L', 'N', 'te']
+    for param in compulsory_params:
+        if hasattr(self, param):
+            dict_.update({param: getattr(self, param)})
+        else:
+            raise ValueError(f'{param} is underfined')
+    dict_['L'], dict_['N'] = xp.atleast_1d(self.L), xp.atleast_1d(self.N)
+    dict_['te'] = xp.atleast_1d(self.te)
+    dict_.update({'ncycles': dict_['te'].sum()}) 
+    Lg = self.Lg if hasattr(self, 'Lg') else dict_['L'].copy()
+    delta = self.delta if hasattr(self, 'delta') else dict_['L'] // 50
+    delta, Lg = xp.atleast_1d(delta), xp.atleast_1d(Lg)
     laser_E_ = lambda phi: xp.atleast_1d(self.laser_E(phi))
-    if not len(L) == len(N) == len(laser_E_(0)):
-        raise ValueError('Dimension of variables in dictionary not compatible')
-    if not len(delta) == len(L):
-        delta = delta[0] * xp.ones_like(L)
-    if not len(Lg) == len(L):
-        Lg = Lg[0] * xp.ones_like(L)
+    dict_['laser_E'] = laser_E_
+    if not len(dict_['L']) == len(dict_['N']) == len(laser_E_(0)):
+        raise ValueError('Dimension of variables L, N or laser_E not compatible')
+    if not len(delta) == len(dict_['L']):
+        delta = delta[0] * xp.ones_like(dict_['L'])
+    if not len(Lg) == len(dict_['L']):
+        Lg = Lg[0] * xp.ones_like(dict_['L'])
+    dict_.update({'Lg': Lg, 'delta': delta, 'dim': len(dict_['L'])})
     if isinstance(self.InitialState, (int, tuple, type(lambda:0))):
-        self.InitialState = [self.InitialState, 'V']
-    if not hasattr(self, 'InitialCoeffs') and isinstance(self.InitialState[0], (int, tuple)):
-        self.InitialCoeffs = xp.ones_like(self.InitialState[0])
-    dict_ = {
-            'Method': self.Method,
-            'laser_intensity': self.laser_intensity,
-            'laser_wavelength': self.laser_wavelength,
-            'envelope': self.laser_envelope,
-            'laser_E': laser_E_,
-            'te': xp.asarray(self.te),
-            'nsteps_per_period': self.nsteps_per_period,
-            'dim': len(L),
-            'ncycles': xp.asarray(self.te).sum(),
-            'scale': self.scale,
-            'V': self.V,
-            'InitialState': self.InitialState,
-            'DisplayCoord': self.DisplayCoord if hasattr(self, 'DisplayCoord') else 'lab',
-            'Lg': Lg,
-            'L': L,
-            'N': N,
-            'delta': delta,
-            'PlotData': self.PlotData,
-            'SaveWaveFunction': self.SaveWaveFunction,
-            'refresh': self.refresh,
-            'SaveData': self.SaveData,
-            'dpi': self.dpi}
-    if hasattr(self, 'legend'):
-        dict_.update({'legend': self.legend})
-    if hasattr(self, 'xlim'):
-        dict_.update({'xlim': self.xlim})   
-    if hasattr(self, 'ylim'):
-        dict_.update({'ylim': self.ylim})
-    if hasattr(self, 'InitialCoeffs'):
-        dict_.update({'InitialCoeffs': self.InitialCoeffs})
-    if not hasattr(self, 'Nkh'):
-        dict_.update({'Nkh': 2**12})
-    if not hasattr(self, 'ode_solver'):
-        dict_.update({'ode_solver': 'BM4'})    
-    if not hasattr(self, 'tol'):
-        dict_.update({'tol': 1e-10}) 
-    if not hasattr(self, 'maxiter'):
-        dict_.update({'maxiter': 1000})
-    if not hasattr(self, 'ncv'):
-        dict_.update({'ncv': 100})
+        dict_['InitialState'] = [self.InitialState, 'V']
+    if not hasattr(self, 'InitialCoeffs') and isinstance(dict_['InitialState'][0], (int, tuple)):
+        dict_.update({'InitialCoeffs': xp.ones_like(self.InitialState[0])})
+    extra_params = ['legend', 'xlim', 'ylim', 'InitialCoeffs']
+    for param in extra_params:
+        if hasattr(self, param):
+            dict_.update({param: getattr(self, param)})
+    default_params = ['envelope', 'nsteps_per_period', 'refresh', 'scale', 'dpi', 'DisplayCoord', 'Nkh', 'ode_solver', 'tol', 'maxiter', 'ncv', 'PlotData', 'SaveData', 'SaveWaveFunction']
+    default_vals = ['const', 1e3, 50, 'linear', 300, 'lab', 2**12, 'BM4', 1e-10, 1000, 100, True, False, False]
+    for param, val in zip(default_params, default_vals):
+        dict_.update({param: val if not hasattr(self, param) else getattr(self, param)})
+    if len(dict_['te']) != 3 and dict_['envelope'] != 'const':
+        raise ValueError('The field envelope requires te to have 3 values (ramp-up, plateau, ramp-down)')
+    if dict_['Method'] == 'Husimi':
+        if not hasattr(self, 'p_husimi') or not hasattr(self, 'sigma_husimi'):
+            raise ValueError('The parameters p_husimi and/or sigma_husimi are not defined')
+        else:
+            dict_.update({'p_husimi': self.p_husimi, 'sigma_husimi': self.sigma_husimi})
     return dict_
 
 class TDSE:
@@ -203,7 +189,7 @@ class TDSE:
             f = (Dphib**2).sum(axis=1).real / 2
             return V2 + f.mean(axis=0).reshape(self.xshape)
 
-    def lab2kh(self, psi:xp.ndarray, t:float, order:int=2, dir:int=1) -> xp.ndarray:
+    def lab2kh(self, psi:xp.ndarray, t:float, order:int=2, dir:str='lab2kh') -> xp.ndarray:
         if self.env == 'const':
             t = t % self.T 
         q = interp1d(self.t_, self.q_, axis=0, kind='quadratic', bounds_error=False, fill_value='extrapolate')(t)
@@ -211,12 +197,12 @@ class TDSE:
         if order == 3:
             phib = interp1d(self.t_, self.phib_, axis=0, kind='quadratic', bounds_error=False, fill_value='extrapolate')(t).reshape(self.xshape)
         expq = xp.exp(1j * xp.einsum('i...,i...->...', self.kgrid, q.reshape(self.dim_ext)))
-        if dir == 1:
+        if dir == 'lab2kh':
             psi_ = ifftn(expq * fftn(psi))
             phase = -xp.einsum('i...,i...->...', self.xgrid + q.reshape(self.dim_ext), A.reshape(self.dim_ext))
             if order == 3:
                 phase -= phib
-        elif dir == -1:
+        elif dir == 'kh2lab':
             psi_ = ifftn(xp.conj(expq) * fftn(psi))
             phase = xp.einsum('i...,i...->...', self.xgrid, A.reshape(self.dim_ext))
             if order == 3:
@@ -225,7 +211,7 @@ class TDSE:
     
     def change_frame(self, t:float, psi:xp.ndarray) -> xp.ndarray:
         if 'KH' in self.DisplayCoord:
-            return self.lab2kh(psi, t, order=int(self.DisplayCoord[-1]), dir=1)
+            return self.lab2kh(psi, t, order=int(self.DisplayCoord[-1]), dir='lab2kh')
         return psi
 
     def env(self, t:float) -> xp.ndarray:
@@ -252,6 +238,14 @@ class TDSE:
         f_hhg = 2 * xp.pi / t * rfftfreq(npoints, d=1/npoints)
         return f_hhg / self.omega, [xp.abs(-rfft(vec_[0]) * f_hhg**2)**2, xp.abs(rfft(vec_[1]))**2]
     
+    def compute_husimi(self, psi:xp.ndarray, p:xp.ndarray, sigma:float) -> xp.ndarray:
+        if self.dim != 1:
+            raise ValueError(f'Computation of Husimi representation not implemented for dimension {self.dim}')
+        xgrid, pgrid = xp.meshgrid(xp.squeeze(self.xgrid), p)
+        xgrid, pgrid = xgrid[xp.newaxis], pgrid[xp.newaxis]
+        psig = lambda x: xp.exp(-(x - xgrid)**2 / (2 * sigma**2) - 1j * x * pgrid) / (xp.pi * sigma**2)**0.25
+        return (xp.abs(xp.sum(psig(self.xgrid.reshape((-1, 1, 1))) * psi, axis=0) * xp.prod(self.dx)))**2 
+
     def plot(self, ax, h, t:float, vec:xp.ndarray) -> None:
         if self.Method in ['wavefunction', 'ionization']:
             psi = self.change_frame(t, vec)
@@ -269,6 +263,9 @@ class TDSE:
                 ax.set_xlim((1, max(freq)))
                 if xp.any(spectrum[0]):
                     ax.set_ylim((min(spectrum[0][1:]), max(spectrum[0][1:])))
+        elif self.Method == 'Husimi':
+            psi = self.change_frame(t, vec)
+            h.set_data(self.compute_husimi(psi, self.p_husimi, self.sigma_husimi))
         ax.set_title(f'$t / T = {{{t / self.T:.2f}}}$', loc='right', pad=20)
         plt.pause(1e-4)           
 
@@ -304,5 +301,5 @@ class TDSE:
             psi_ = xp.squeeze(self.InitialState[0](self.xgrid))
             lam_, err_ = [], []
         if 'KH' in self.InitialState[1]:
-            psi_ = self.lab2kh(psi_, 0, order=int(self.InitialState[1][-1]), dir=-1)  
+            psi_ = self.lab2kh(psi_, 0, order=int(self.InitialState[1][-1]), dir='kh2lab')  
         return psi_, lam_, err_
