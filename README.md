@@ -44,41 +44,41 @@ The list of Python packages and their version are specified in [`requirements.tx
 
 ##  Parameters
 
+The file [`TDSE_params.py`](https://github.com/cchandre/KH/blob/main/TDSE_params.py) should contain the following parameters:
+
 - *Method*: string; 'eigenstates', 'wavefunction', 'HHG', 'ionization'; choice of method
   - 'eigenstates': plot the first *k* eigenstates and eigenvalues of the potential specified in *InitialState[1]*, where *k* is equal to *InitialState[0]*+1
   - 'wavefunction': displays the wavefunction as a function of time obtained by integrating the TDSE equation
   - 'HHG': compute the high-harmonic generation (HHG) spectrum as a function of time 
-  - 'ionization': computes the ionization probability as well as displaying the wavefunction as a function of time 
-   
-
-####
+  - 'ionization': computes the ionization probability as well as displaying the wavefunction as a function of time
+  - 'Husimi': computes the Husimi representation of the wavefunction as a function of time
 - *laser_intensity*: float; intensity of the laser field in W cm<sup>-2</sup>
 - *laser_wavelength*: float; wavelength of the laser field in nm
-- *laser_envelope*: string; 'trapez', 'sinus', 'const'; envelope of the laser field during ramp-up and ramp-down
 - *laser_E*: lambda function returning an array of *n* floats; *n* components (where *n* is the dimension of configuration space) of the electric field (dipole approximation); the electric field is then given by *E0* * *laser_envelope*(t) * *laser_E*(&omega; t) where *E0* = sqrt(*laser_intensity*)
 - *te*: array of 3 floats; duration of the ramp-up, plateau and ramp-down in laser cycles
 - *V*: lambda function; ionic potential
 - *InitialState*: integer or array [integer or tuple of integers or lambda function, string]; integer = index of the initial eigenstate (0 corresponds to the ground state, 1 is the first excited state...); string = potential with which the initial state is computed ('V', 'VKH2' or 'VKH3'); in case a tuple of integers is entered, the initial state is a linear combination of the various states in the tuple with the coefficients given in *InitialCoeffs*; if *InitialState* or *InitialState*[0] is a lambda function, the initial state is computed on the grid using this function
-- *InitialCoeffs*: (optional); array of floats; the initial state is a linear combination of eigenstates $\Psi_k(x)$ of the potential defined in *InitialState*[1], i.e., $\psi(x,0)=\sum_k c_k \Psi_k(x)$ where $k$ belongs to *InitialState*[0]; if not specified, the coefficients are equal to 1
-- *DisplayCoord*: (optional); string; 'lab', 'KH2' or 'KH3'; if KH (Kramers-Henneberger), the wave function is moved to the KH frame (for display and for saving) of order 2 or 3; if not specified, 'lab' is the default
-####
 - *L*: array of *n* floats; size of the box in each direction
 - *N*: array of *n* integers; number of points in each direction
+
+Some additional (optional) parameters could be defined in [`TDSE_params.py`](https://github.com/cchandre/KH/blob/main/TDSE_params.py):
+
+- *laser_envelope*: string; 'trapez', 'sinus', 'const'; envelope of the laser field during ramp-up and ramp-down
+- *InitialCoeffs*: array of floats; the initial state is a linear combination of eigenstates $\Psi_k(x)$ of the potential defined in *InitialState*[1], i.e., $\psi(x,0)=\sum_k c_k \Psi_k(x)$ where $k$ belongs to *InitialState*[0]; if not specified, the coefficients are equal to 1
+- *DisplayCoord*: string; 'lab', 'KH2' or 'KH3'; if KH (Kramers-Henneberger), the wave function is moved to the KH frame (for display and for saving) of order 2 or 3; if not specified, 'lab' is the default
 - *delta*: float or array of *n* floats; size of the absorbing boundary in each direction (if float, the size is taken equal in all dimensions)
-- *Lg*: (optional); float or array of *n* floats; size of the box for the initial computation of the initial state along each dimension; if float, [-*Lg*, *Lg*] in each dimension; if not specified, *Lg*=*L*
+- *Lg*: float or array of *n* floats; size of the box for the initial computation of the initial state along each dimension; if float, [-*Lg*, *Lg*] in each dimension; if not specified, *Lg*=*L*
 - *nsteps_per_period*: integer; number of steps per laser period for the integration; the time-step is then defined as 2&pi; /&omega; / *nsteps_per_period*
 - *scale*: string; 'linear' or 'log'; the axis scale type to apply for the representation of the wavefunction (if *Method*='wavefunction')
-- *legend*: (optional); string; location of the legend; for more details, see [matplotlib legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html)
-- *xlim*: (optional); tuple of floats; x-axis view limits (in atomic units)
-- *ylim*: (optional); tuple of floats or string; y-axis view limits (in atomic units); if 'auto', let the y-axis scale automatically
+- *legend*: string; location of the legend; for more details, see [matplotlib legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html)
+- *xlim*: tuple of floats; x-axis view limits (in atomic units)
+- *ylim*: tuple of floats or string; y-axis view limits (in atomic units); if 'auto', let the y-axis scale automatically
 - *SaveWaveFunction*: boolean; if True, saves the animation of the wavefunction  as an animated `.gif` image
 - *PlotData*: boolean; if True, displays the wavefunction on the screen as time increases (only for 1D and 2D)
 - *SaveData*: boolean; if True, the time evolution of the wave function are saved in a `.mat` file
 - *dpi*: integer; number of dots per inch for the movie frames (if *SaveWaveFunction* is True)
 - *refresh*: integer; the wavefunction is displayed every *refresh* time steps
 - *darkmode*: boolean; if True, plots are done in dark mode
-####
-The following options may be changed from default values in [`TDSE_params.py`](https://github.com/cchandre/KH/blob/main/TDSE_params.py):
 - *tol*: relative accuracy for eigenvalues (stopping criterion) (default=10<sup>-10</sup>, 0 implies machine precision); see [eigsh](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.eigsh.html)
 - *maxiter*: maximum number of Arnoldi update iterations allowed (default=1000); see [eigsh](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.eigsh.html)
 - *ncv*: number of Lanczos vectors generated (default=100); see [eigsh](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.eigsh.html)
