@@ -46,7 +46,7 @@ def generate_dict(self) -> dict:
     dict_['te'] = xp.atleast_1d(self.te)
     dict_.update({'ncycles': dict_['te'].sum()}) 
     Lg = self.Lg if hasattr(self, 'Lg') else dict_['L'].copy()
-    delta = self.delta if hasattr(self, 'delta') else dict_['L'] // 50
+    delta = self.delta if hasattr(self, 'delta') else dict_['L'] // 20
     delta, Lg = xp.atleast_1d(delta), xp.atleast_1d(Lg)
     laser_E_ = lambda phi: xp.atleast_1d(self.laser_E(phi))
     dict_['laser_E'] = laser_E_
@@ -255,6 +255,8 @@ class TDSE:
                     ax.set_ylim((0, 1.1 * max(xp.abs(psi)**2)))
             elif self.dim == 2:
                 h.set_data(xp.abs(psi).transpose()**2)
+                if self.scale == 'linear':
+                    h.set_clim(0, xp.abs(psi).max()**2)
         elif self.Method == 'HHG':
             if t > 0:
                 freq, spectrum = self.compute_spectrum(t, vec)
@@ -298,7 +300,8 @@ class TDSE:
             lam_ = float(lam) if num_init == 1 else lam[0]
             err_ = max(err) if num_init >= 2 else float(err)
         elif isinstance(self.InitialState[0], type(lambda:0)):
-            psi_ = xp.squeeze(self.InitialState[0](self.xgrid))
+            psi_ = self.InitialState[0](xp.squeeze(self.xgrid))
+            psi_ /= self.norm(psi_)
             lam_, err_ = [], []
         if 'KH' in self.InitialState[1]:
             psi_ = self.lab2kh(psi_, 0, order=int(self.InitialState[1][-1]), dir='kh2lab')  

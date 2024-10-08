@@ -169,7 +169,11 @@ def display_axes(self, data, type:str='wavefunction'):
 			plt.tight_layout(pad=2)
 		elif self.dim == 2:
 			norm = LogNorm(vmin=1e-4, vmax=(xp.abs(data)**2).max(), clip=True) if self.scale=='log' else None
-			h = ax.imshow(xp.abs(data).transpose()**2, extent=(-self.L[0] / self.q0, self.L[0] / self.q0, -self.L[1] / self.q0, self.L[1] / self.q0), cmap=cmap_psi, norm=norm, interpolation='nearest')
+			xmin = -self.L[0] / self.q0 if not hasattr(self, 'xlim') else self.xlim[0] / self.q0
+			xmax = self.L[0] / self.q0 if not hasattr(self, 'xlim') else self.xlim[1] / self.q0
+			ymin = -self.L[1] / self.q0 if not hasattr(self, 'ylim') else self.ylim[0] / self.q0
+			ymax = self.L[1] / self.q0 if not hasattr(self, 'ylim') else self.ylim[1] / self.q0
+			h = ax.imshow((xp.abs(data)**2).transpose(), extent=(xmin, xmax, ymin, ymax), cmap=cmap_psi, norm=norm, interpolation='nearest')
 			fig.colorbar(h, ax=ax, shrink=0.5)
 			ax.set_ylabel('$y/q$')
 		ax.set_title('$t / T = 0 $', loc='right', pad=20)
