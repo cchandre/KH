@@ -59,6 +59,7 @@ def main() -> None:
 	self = TDSE()
 	print(f'\033[92m  {self} \033[00m')
 	filestr = type(self).__name__ + '_' + time.strftime('%Y%m%d_%H%M')
+
 	if self.Method == 'eigenstates':
 		start = time.time()
 		lam, psi, err = self.eigenstates(self.Vgrid_, max(xp.atleast_1d(self.InitialState[0])) + 1, output='all')
@@ -86,6 +87,7 @@ def main() -> None:
 		init_density = self.norm(psi0)**2
 		if self.PlotData:
 			fig, ax, h = display_axes(self, self.change_frame(0, psi0), type=self.Method)
+			plt.pause(1e-4)
 
 		start = time.time()
 
@@ -95,9 +97,9 @@ def main() -> None:
 			n = int(t / self.step)
 			if (n+1)%self.refresh == 0 and self.PlotData:
 				if self.Method in ['wavefunction', 'Husimi', 'ionization']:
-					vec = psi
+					vec = psi.copy()
 				elif self.Method == 'HHG':
-					vec = self.hhg
+					vec = self.hhg.copy()
 				self.plot(ax, h, t, vec)
 		
 		tspan = xp.linspace(0, self.final_time, int(self.ncycles * self.nsteps_per_period // self.refresh))
@@ -169,11 +171,11 @@ def display_axes(self, data, type:str='wavefunction'):
 			plt.tight_layout(pad=2)
 		elif self.dim == 2:
 			norm = LogNorm(vmin=1e-4, vmax=(xp.abs(data)**2).max(), clip=True) if self.scale=='log' else None
-			xmin = -self.L[0] / self.q0 if not hasattr(self, 'xlim') else self.xlim[0] / self.q0
-			xmax = self.L[0] / self.q0 if not hasattr(self, 'xlim') else self.xlim[1] / self.q0
-			ymin = -self.L[1] / self.q0 if not hasattr(self, 'ylim') else self.ylim[0] / self.q0
-			ymax = self.L[1] / self.q0 if not hasattr(self, 'ylim') else self.ylim[1] / self.q0
-			h = ax.imshow((xp.abs(data)**2).transpose(), extent=(xmin, xmax, ymin, ymax), cmap=cmap_psi, norm=norm, interpolation='nearest')
+			h = ax.imshow((xp.abs(data)**2).transpose(), extent=(-self.L[0] / self.q0, self.L[0] / self.q0, -self.L[1] / self.q0, self.L[1] / self.q0), cmap=cmap_psi, norm=norm, interpolation='nearest')
+			if hasattr(self, 'xlim'):
+				ax.set_xlim((self.xlim[0] / self.q0, self.xlim[1] / self.q0))
+			if hasattr(self, 'ylim'):
+				ax.set_ylim((self.ylim[0] / self.q0, self.ylim[1] / self.q0))
 			fig.colorbar(h, ax=ax, shrink=0.5)
 			ax.set_ylabel('$y/q$')
 		ax.set_title('$t / T = 0 $', loc='right', pad=20)

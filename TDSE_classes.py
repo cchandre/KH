@@ -46,7 +46,7 @@ def generate_dict(self) -> dict:
     dict_['te'] = xp.atleast_1d(self.te)
     dict_.update({'ncycles': dict_['te'].sum()}) 
     Lg = self.Lg if hasattr(self, 'Lg') else dict_['L'].copy()
-    delta = self.delta if hasattr(self, 'delta') else dict_['L'] // 20
+    delta = self.delta if hasattr(self, 'delta') else dict_['L'] // 40
     delta, Lg = xp.atleast_1d(delta), xp.atleast_1d(Lg)
     laser_E_ = lambda phi: xp.atleast_1d(self.laser_E(phi))
     dict_['laser_E'] = laser_E_
@@ -60,7 +60,7 @@ def generate_dict(self) -> dict:
     if isinstance(self.InitialState, (int, tuple, type(lambda:0))):
         dict_['InitialState'] = [self.InitialState, 'V']
     if not hasattr(self, 'InitialCoeffs') and isinstance(dict_['InitialState'][0], (int, tuple)):
-        dict_.update({'InitialCoeffs': xp.ones_like(self.InitialState[0])})
+        dict_.update({'InitialCoeffs': xp.ones_like(dict_['InitialState'][0])})
     extra_params = ['legend', 'xlim', 'ylim', 'InitialCoeffs']
     for param in extra_params:
         if hasattr(self, param):
@@ -110,7 +110,7 @@ class TDSE:
         self.Vgrid = self.V(xp.sqrt((self.xgrid**2).sum(axis=0)))
         self.xshape = self.Vgrid.shape
         self.dim_ext = (self.dim,) + self.dim * (1,)
-        self.Tavg = self.T if self.env=='const' else self.final_time
+        self.Tavg = self.T if self.envelope=='const' else self.final_time
         if 'KH' in self.DisplayCoord + self.InitialState[1]:
             self.t_, self.A_, self.q_, self.phib_ = self.compute_stflds()
         if self.InitialState[1] == 'V':
@@ -190,7 +190,7 @@ class TDSE:
             return V2 + f.mean(axis=0).reshape(self.xshape)
 
     def lab2kh(self, psi:xp.ndarray, t:float, order:int=2, dir:str='lab2kh') -> xp.ndarray:
-        if self.env == 'const':
+        if self.envelope == 'const':
             t = t % self.T 
         q = interp1d(self.t_, self.q_, axis=0, kind='quadratic', bounds_error=False, fill_value='extrapolate')(t)
         A = interp1d(self.t_, self.A_, axis=0, kind='quadratic', bounds_error=False, fill_value='extrapolate')(t)
@@ -211,17 +211,19 @@ class TDSE:
     
     def change_frame(self, t:float, psi:xp.ndarray) -> xp.ndarray:
         if 'KH' in self.DisplayCoord:
-            return self.lab2kh(psi, t, order=int(self.DisplayCoord[-1]), dir='lab2kh')
+            return self.lab2kh(psi, t, order=int(self.DisplayCoord[-1]))
         return psi
 
     def env(self, t:float) -> xp.ndarray:
         te = xp.cumsum(self.te)
-        if self.envelope == 'sinus':
-            return xp.where(t<=0, 0, xp.where(t<=te[0], xp.sin(xp.pi * t / (2 * te[0]))**2, xp.where(t<=te[1], 1, xp.where(t<=te[2], xp.sin(xp.pi * (te[2] - t) / (2 * self.te[2]))**2, 0))))
-        elif self.envelope == 'const':
+        if self.envelope == 'const':
             return 1
+        elif self.envelope == 'sinus':
+            return xp.where(t<=0, 0, xp.where(t<=te[0], xp.sin(xp.pi * t / (2 * te[0]))**2, xp.where(t<=te[1], 1, xp.where(t<=te[2], xp.sin(xp.pi * (te[2] - t) / (2 * self.te[2]))**2, 0))))
         elif self.envelope == 'trapez':
             return xp.where(t<=0, 0, xp.where(t<=te[0], t / te[0], xp.where(t<=te[1], 1, xp.where(t<=te[2], (te[2] - t) / self.te[2], 0))))
+        else:
+            raise ValueError(f'The field envelope {self.envelope} is not defined')
 
     def norm(self, psi:xp.ndarray) -> float:
         return xp.sqrt(xp.sum(xp.abs(psi)**2) * xp.prod(self.dx))
