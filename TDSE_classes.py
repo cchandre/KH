@@ -46,17 +46,14 @@ def generate_dict(self) -> dict:
     dict_['te'] = xp.atleast_1d(self.te)
     dict_.update({'ncycles': dict_['te'].sum()}) 
     Lg = self.Lg if hasattr(self, 'Lg') else dict_['L'].copy()
-    delta = self.delta if hasattr(self, 'delta') else dict_['L'] // 40
+    delta = self.delta if hasattr(self, 'delta') else dict_['L'] // 10
     delta, Lg = xp.atleast_1d(delta), xp.atleast_1d(Lg)
-    laser_E_ = lambda phi: xp.atleast_1d(self.laser_E(phi))
-    dict_['laser_E'] = laser_E_
-    if not len(dict_['L']) == len(dict_['N']) == len(laser_E_(0)):
-        raise ValueError('Dimension of variables L, N or laser_E not compatible')
+    dim = len(xp.atleast_1d(self.laser_E(0)))
     if not len(delta) == len(dict_['L']):
         delta = delta[0] * xp.ones_like(dict_['L'])
     if not len(Lg) == len(dict_['L']):
         Lg = Lg[0] * xp.ones_like(dict_['L'])
-    dict_.update({'Lg': Lg, 'delta': delta, 'dim': len(dict_['L'])})
+    dict_.update({'Lg': Lg, 'delta': delta, 'dim': dim})
     if isinstance(self.InitialState, (int, tuple, type(lambda:0))):
         dict_['InitialState'] = [self.InitialState, 'V']
     if not hasattr(self, 'InitialCoeffs') and isinstance(dict_['InitialState'][0], (int, tuple)):
@@ -95,7 +92,7 @@ class TDSE:
         self.T = 2 * xp.pi / self.omega
         self.Up = self.E0**2 / (4 * self.omega**2)
         self.q0 = self.E0 / self.omega**2
-        self.E = lambda t: self.E0 * self.env(t) * self.laser_E(self.omega * t)
+        self.E = xp.vectorize(lambda t: self.E0 * self.env(t) * xp.atleast_1d(self.laser_E(self.omega * t)), signature='()->(n)')
         self.te = self.te * self.T
         self.final_time = xp.sum(self.te)
         self.step = self.T / self.nsteps_per_period
@@ -113,10 +110,6 @@ class TDSE:
         self.Tavg = self.T if self.envelope=='const' else self.final_time
         if 'KH' in self.DisplayCoord + self.InitialState[1]:
             self.t_, self.A_, self.q_, self.phib_ = self.compute_stflds()
-        if self.InitialState[1] == 'V':
-            self.Vgrid_ = self.Vgrid.copy()
-        elif 'KH' in self.InitialState[1]:
-            self.Vgrid_ = self.kh_potential(int(self.InitialState[1][-1]))
 
     def eigenstates(self, V:xp.ndarray, k:int, output:str='last'):
         indx = [[xp.abs(self.vecx[_] + self.Lg[_]).argmin(), xp.abs(self.vecx[_] - self.Lg[_]).argmin()] for _ in range(self.dim)]
@@ -168,10 +161,9 @@ class TDSE:
 
     def compute_stflds(self) -> Tuple[float, xp.ndarray, xp.ndarray, xp.ndarray, xp.ndarray]:
         t = xp.linspace(0, self.Tavg, self.Nkh, endpoint=False)
-        E = xp.concatenate(xp.frompyfunc(self.E, 1, 1)(t), axis=0).reshape((-1, self.dim))
-        A = -self.antiderivative(E)
+        A = -self.antiderivative(self.E(t))
         q = self.antiderivative(A)
-        if self.InitialState[1] == 'VKH3' or self.DisplayCoord == 'KH3' or self.Method == 'plot_potentials':
+        if '3' in self.InitialState[1] + self.DisplayCoord or self.Method == 'plot_potentials':
             phib = -self.antiderivative(self.V(xp.sqrt(((self.xgrid[xp.newaxis] + q.reshape((-1,) + self.dim_ext))**2).sum(axis=1))))
             return t, A, q, phib
         else:
@@ -189,29 +181,29 @@ class TDSE:
             f = (Dphib**2).sum(axis=1).real / 2
             return V2 + f.mean(axis=0).reshape(self.xshape)
 
-    def lab2kh(self, psi:xp.ndarray, t:float, order:int=2, dir:str='lab2kh') -> xp.ndarray:
+    def lab2kh(self, t:float, psi:xp.ndarray, order:int=2, dir:str='lab2kh') -> xp.ndarray:
         if self.envelope == 'const':
             t = t % self.T 
         q = interp1d(self.t_, self.q_, axis=0, kind='quadratic', bounds_error=False, fill_value='extrapolate')(t)
         A = interp1d(self.t_, self.A_, axis=0, kind='quadratic', bounds_error=False, fill_value='extrapolate')(t)
         if order == 3:
             phib = interp1d(self.t_, self.phib_, axis=0, kind='quadratic', bounds_error=False, fill_value='extrapolate')(t).reshape(self.xshape)
-        expq = xp.exp(1j * xp.einsum('i...,i...->...', self.kgrid, q.reshape(self.dim_ext)))
+        expq = xp.exp(1j * xp.einsum('i...,...i->...', self.kgrid, q))
         if dir == 'lab2kh':
             psi_ = ifftn(expq * fftn(psi))
-            phase = -xp.einsum('i...,i...->...', self.xgrid + q.reshape(self.dim_ext), A.reshape(self.dim_ext))
+            phase = -xp.einsum('i...,...i->...', self.xgrid + q.reshape(self.dim_ext), A)
             if order == 3:
                 phase -= phib
         elif dir == 'kh2lab':
             psi_ = ifftn(xp.conj(expq) * fftn(psi))
-            phase = xp.einsum('i...,i...->...', self.xgrid, A.reshape(self.dim_ext))
+            phase = xp.einsum('i...,...i->...', self.xgrid, A)
             if order == 3:
                 phase += (ifftn(xp.conj(expq) * fftn(phib))).real
         return (psi_ * xp.exp(1j * phase)).reshape(self.xshape)
     
     def change_frame(self, t:float, psi:xp.ndarray) -> xp.ndarray:
         if 'KH' in self.DisplayCoord:
-            return self.lab2kh(psi, t, order=int(self.DisplayCoord[-1]))
+            return self.lab2kh(t, psi, order=int(self.DisplayCoord[-1]))
         return psi
 
     def env(self, t:float) -> xp.ndarray:
@@ -256,7 +248,7 @@ class TDSE:
                 if hasattr(self, 'ylim') and self.ylim == 'auto':
                     ax.set_ylim((0, 1.1 * max(xp.abs(psi)**2)))
             elif self.dim == 2:
-                h.set_data(xp.abs(psi).transpose()**2)
+                h.set_data(xp.abs(psi).T**2)
                 if self.scale == 'linear':
                     h.set_clim(0, xp.abs(psi).max()**2)
         elif self.Method == 'HHG':
@@ -285,19 +277,23 @@ class TDSE:
     
     def chi(self, h:float, t:float, psi:xp.ndarray) -> xp.ndarray:
         psi = ifftn(xp.exp(-1j * self.Lap * h) * fftn(psi))
-        Vgrid = self.Vgrid + xp.einsum('i...,i...->...', self.xgrid, self.E(t).reshape(self.dim_ext))
+        Vgrid = self.Vgrid + xp.einsum('i...,...i->...', self.xgrid, self.E(t))
         return xp.exp(-1j * Vgrid * h) * psi * self.Abs
     
     def chi_star(self, h:float, t:float, psi:xp.ndarray) -> xp.ndarray:
-        Vgrid = self.Vgrid + xp.einsum('i...,i...->...', self.xgrid, self.E(t).reshape(self.dim_ext))
+        Vgrid = self.Vgrid + xp.einsum('i...,...i->...', self.xgrid, self.E(t))
         psi = xp.exp(-1j * Vgrid * h) * psi
         return ifftn(xp.exp(-1j * self.Lap * h) * fftn(psi)) * self.Abs
     
     def initcond(self) -> Tuple[xp.ndarray, float, float]:
         if isinstance(self.InitialState[0], (int, tuple)):
+            if self.InitialState[1] == 'V':
+                Vgrid_ = self.Vgrid.copy()
+            elif 'KH' in self.InitialState[1]:
+                Vgrid_ = self.kh_potential(int(self.InitialState[1][-1]))
             num_init = len(xp.atleast_1d(self.InitialState[0]))
             max_init = max(xp.atleast_1d(self.InitialState[0])) + 1
-            lam, psi, err = self.eigenstates(self.Vgrid_, max_init, output='all' if num_init >= 2 else 'last')
+            lam, psi, err = self.eigenstates(Vgrid_, max_init, output='all' if num_init >= 2 else 'last')
             psi_ = xp.sum(xp.asarray([self.InitialCoeffs[_] * psi[_] for _ in range(num_init)]), axis=0) / xp.sqrt(num_init) if num_init >= 2 else psi
             lam_ = float(lam) if num_init == 1 else lam[0]
             err_ = max(err) if num_init >= 2 else float(err)
@@ -306,5 +302,5 @@ class TDSE:
             psi_ /= self.norm(psi_)
             lam_, err_ = [], []
         if 'KH' in self.InitialState[1]:
-            psi_ = self.lab2kh(psi_, 0, order=int(self.InitialState[1][-1]), dir='kh2lab')  
+            psi_ = self.lab2kh(0, psi_, order=int(self.InitialState[1][-1]), dir='kh2lab')  
         return psi_, lam_, err_
