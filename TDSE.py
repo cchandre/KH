@@ -62,7 +62,11 @@ def main() -> None:
 
 	if self.Method == 'eigenstates':
 		start = time.time()
-		lam, psi, err = self.eigenstates(self.Vgrid_, max(xp.atleast_1d(self.InitialState[0])) + 1, output='all')
+		if self.InitialState[1] == 'V':
+			Vgrid = self.Vgrid.copy()
+		elif 'KH' in self.InitialState[1]:
+			Vgrid = self.kh_potential(int(self.InitialState[1][-1]))
+		lam, psi, err = self.eigenstates(Vgrid, max(xp.atleast_1d(self.InitialState[0])) + 1, output='all')
 		fig, ax = display_axes(self, [lam, psi, err], type='eigenstates')
 		print(f'\033[90m        Computation of the following eigenstates finished in {int(time.time() - start)} seconds \033[00m')
 		for _ in range(max(xp.atleast_1d(self.InitialState[0])) + 1):
@@ -84,10 +88,9 @@ def main() -> None:
 			print(f'\033[90m        Computation of the initial state finished in {int(time.time() - start)} seconds: E0 = {lam0:.6f} (with err = {err:.2e}) \033[00m')
 			if self.dim >= 2:
 				print(f'\033[90m                   with quantum number(s):  L = {self.quantum_numbers(psi0)} \033[00m')
-		init_density = self.norm(psi0)**2
+		
 		if self.PlotData:
 			fig, ax, h = display_axes(self, self.change_frame(0, psi0), type=self.Method)
-			plt.pause(1e-4)
 
 		start = time.time()
 
@@ -115,8 +118,9 @@ def main() -> None:
 				return h
 			FuncAnimation(fig, animate, frames=len(sol.t), interval=200).save(filestr + '.gif', writer=PillowWriter(fps=5), dpi=self.dpi)
 			print(f'\033[90m        Animation saved in {filestr}.gif \033[00m')
+
 		if self.Method == 'ionization':
-			proba = 1 - self.norm(sol.y[..., -1])**2 / init_density
+			proba = 1 - self.norm(sol.y[..., -1])**2 / self.norm(psi0)**2
 			print(f'\033[96m          for E0 = {self.E0:.3e}, ionization probability = {proba:.2e} \033[00m')
 			vec_data = [self.E0, proba]
 			file = open('TDSE_' + self.Method + '.txt', 'a')
@@ -147,7 +151,7 @@ def display_axes(self, data, type:str='wavefunction'):
 				fig, ax = plt.subplots(1, 1)
 				fig.canvas.manager.set_window_title(f'TDSE simulation: {_}th eigenstate of {self.InitialState[1]}')
 				extent = (-self.L[0], self.L[0], -self.L[1], self.L[1])
-				im = ax.imshow(psi[_].transpose(), origin='lower', extent=extent, norm=divnorm)
+				im = ax.imshow(psi[_].T, origin='lower', extent=extent, norm=divnorm)
 				ax.set_title(f'$E$ = {lam[_]:.3f}  (err = {err[_]:.2e})')
 				ax.set_xlabel('$x$')
 				ax.set_ylabel('$y$')
@@ -170,8 +174,8 @@ def display_axes(self, data, type:str='wavefunction'):
 			ax.set_aspect('auto')
 			plt.tight_layout(pad=2)
 		elif self.dim == 2:
-			norm = LogNorm(vmin=1e-4, vmax=(xp.abs(data)**2).max(), clip=True) if self.scale=='log' else None
-			h = ax.imshow((xp.abs(data)**2).transpose(), extent=(-self.L[0] / self.q0, self.L[0] / self.q0, -self.L[1] / self.q0, self.L[1] / self.q0), cmap=cmap_psi, norm=norm, interpolation='nearest')
+			norm = LogNorm(vmin=1e-4, vmax=xp.abs(data).max()**2, clip=True) if self.scale=='log' else None
+			h = ax.imshow(xp.abs(data).T**2, extent=(-self.L[0] / self.q0, self.L[0] / self.q0, -self.L[1] / self.q0, self.L[1] / self.q0), cmap=cmap_psi, norm=norm, interpolation='nearest')
 			if hasattr(self, 'xlim'):
 				ax.set_xlim((self.xlim[0] / self.q0, self.xlim[1] / self.q0))
 			if hasattr(self, 'ylim'):
@@ -193,7 +197,7 @@ def display_axes(self, data, type:str='wavefunction'):
 		hrepr = self.compute_husimi(data, self.p_husimi, self.sigma_husimi)
 		fig, ax = plt.subplots(figsize=(8, 4))
 		fig.canvas.manager.set_window_title(f'TDSE simulation: Husimi representation')
-		h = ax.imshow(hrepr.transpose(), extent=(-self.L[0] / self.q0, self.L[0] / self.q0, self.p_husimi.min() / p0, self.p_husimi.max() / p0), cmap=cmap_psi, interpolation='nearest')
+		h = ax.imshow(hrepr.T, extent=(-self.L[0] / self.q0, self.L[0] / self.q0, self.p_husimi.min() / p0, self.p_husimi.max() / p0), cmap=cmap_psi, interpolation='nearest')
 		fig.colorbar(h, ax=ax, shrink=0.5)
 		ax.set_xlabel('$x/q$')
 		ax.set_ylabel('$\omega p / E_0$')
