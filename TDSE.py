@@ -97,7 +97,7 @@ def main() -> None:
 		def plot_command(t:float, psi:xp.ndarray) -> None:
 			if self.Method == 'HHG':
 				dipole = xp.asarray(self.dipole(t, psi))
-				self.hhg = xp.concatenate((self.hhg, dipole), axis=-1) if hasattr(self, 'hhg') else dipole
+				self.hhg = xp.concatenate((self.hhg, dipole), axis=1) if hasattr(self, 'hhg') else dipole
 			n = int(t / self.step)
 			if (n+1)%self.refresh == 0 and self.PlotData:
 				if self.Method in ['wavefunction', 'Husimi', 'ionization']:
