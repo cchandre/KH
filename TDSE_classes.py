@@ -58,7 +58,7 @@ def generate_dict(self) -> dict:
         dict_['InitialState'] = [self.InitialState, 'V']
     if not hasattr(self, 'InitialCoeffs') and isinstance(dict_['InitialState'][0], (int, tuple)):
         dict_.update({'InitialCoeffs': xp.ones_like(dict_['InitialState'][0])})
-    extra_params = ['legend', 'xlim', 'ylim', 'InitialCoeffs']
+    extra_params = ['legend', 'xlim', 'ylim', 'figsize', 'InitialCoeffs']
     for param in extra_params:
         if hasattr(self, param):
             dict_.update({param: getattr(self, param)})

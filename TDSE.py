@@ -135,7 +135,7 @@ def display_axes(self, data, type:str='wavefunction'):
 	if type == 'eigenstates':
 		lam, psi, err = data[0], data[1], data[2]
 		if self.dim == 1:
-			fig = plt.figure(figsize=(8, 8))
+			fig = plt.figure(figsize=(8, 4) if not hasattr(self, 'figsize') else self.figsize)
 			fig.canvas.manager.set_window_title(f'TDSE simulation: {type} of {self.InitialState[1]}')
 			ax = plt.gca()
 			for _ in range(max(xp.atleast_1d(self.InitialState[0])) + 1):
@@ -158,7 +158,7 @@ def display_axes(self, data, type:str='wavefunction'):
 				plt.colorbar(im)
 		return fig, ax
 	elif type in ['wavefunction', 'ionization']:
-		fig, ax = plt.subplots(figsize=(8, 4))
+		fig, ax = plt.subplots(figsize=(8, 4) if not hasattr(self, 'figsize') else self.figsize)
 		fig.canvas.manager.set_window_title(f'TDSE simulation: {type}')
 		if self.dim == 1:
 			ax.plot(self.xgrid[0] / self.q0, xp.abs(data)**2, cs[2], linewidth=1, label=r'$\vert\psi (x,0)\vert^2$')
@@ -185,7 +185,7 @@ def display_axes(self, data, type:str='wavefunction'):
 		ax.set_title('$t / T = 0 $', loc='right', pad=20)
 		ax.set_xlabel('$x/q$')
 	elif type == 'HHG':
-		fig, ax = plt.subplots(figsize=(8, 4))
+		fig, ax = plt.subplots(figsize=(8, 4) if not hasattr(self, 'figsize') else self.figsize)
 		fig.canvas.manager.set_window_title(f'TDSE simulation: HHG spectrum')
 		h = ax.plot([], [], cs[2], linewidth=2, label=r'dipole')[0], ax.plot([], [], cs[3], linewidth=2, label=r'acceleration')[0]
 		ax.axvline(x= (3.17 * self.Up + self.compute_Ip()) / self.omega, color='k', linewidth=2, label=r'$3.17 U_p + I_p$')
@@ -195,7 +195,7 @@ def display_axes(self, data, type:str='wavefunction'):
 	elif type == 'Husimi':
 		p0 = self.omega / self.E0
 		hrepr = self.compute_husimi(data, self.p_husimi, self.sigma_husimi)
-		fig, ax = plt.subplots(figsize=(8, 4))
+		fig, ax = plt.subplots(figsize=(8, 4) if not hasattr(self, 'figsize') else self.figsize)
 		fig.canvas.manager.set_window_title(f'TDSE simulation: Husimi representation')
 		h = ax.imshow(hrepr.T, extent=(-self.L[0] / self.q0, self.L[0] / self.q0, self.p_husimi.min() / p0, self.p_husimi.max() / p0), cmap=cmap_psi, interpolation='nearest')
 		fig.colorbar(h, ax=ax, shrink=0.5)
