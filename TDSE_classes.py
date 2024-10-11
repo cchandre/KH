@@ -43,7 +43,7 @@ def generate_dict(self) -> dict:
         if hasattr(self, param):
             dict_.update({param: getattr(self, param)})
         else:
-            raise ValueError(f'{param} is underfined')
+            raise ValueError(f'The parameter {param} should be defined')
     dict_['L'], dict_['N'] = xp.atleast_1d(self.L), xp.atleast_1d(self.N)
     dict_['te'] = xp.atleast_1d(self.te)
     dict_.update({'ncycles': dict_['te'].sum()}) 
@@ -69,7 +69,7 @@ def generate_dict(self) -> dict:
         raise ValueError('The field envelope requires te to have 3 values (ramp-up, plateau, ramp-down)')
     if dict_['Method'] == 'Husimi':
         if not hasattr(self, 'p_husimi') or not hasattr(self, 'sigma_husimi'):
-            raise ValueError('The parameters p_husimi and/or sigma_husimi are not defined')
+            raise ValueError('The parameters p_husimi and/or sigma_husimi should be defined')
         else:
             dict_.update({'p_husimi': self.p_husimi, 'sigma_husimi': self.sigma_husimi})
     return dict_
