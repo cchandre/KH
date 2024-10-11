@@ -73,6 +73,7 @@ Some additional (optional) parameters could be defined in [`TDSE_params.py`](htt
 - *legend*: string; location of the legend; for more details, see [matplotlib legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html)
 - *xlim*: tuple of floats; x-axis view limits (in atomic units)
 - *ylim*: tuple of floats or string; y-axis view limits (in atomic units); if 'auto', let the y-axis scale automatically
+- *figsize*: tuple of floats; width and height in inches of the figure
 - *SaveWaveFunction*: boolean; if True, saves the animation of the wavefunction  as an animated `.gif` image
 - *PlotData*: boolean; if True, displays the wavefunction on the screen as time increases (only for 1D and 2D)
 - *SaveData*: boolean; if True, the time evolution of the wave function are saved in a `.mat` file
