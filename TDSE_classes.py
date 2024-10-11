@@ -32,11 +32,13 @@ from scipy.interpolate import interp1d
 from scipy.signal.windows import hann
 import scipy.sparse.linalg as la
 from typing import Tuple, List
-import TDSE_params
 
 def generate_dict(self) -> dict:
     dict_ = dict()
     compulsory_params = ['Method', 'laser_intensity', 'laser_wavelength', 'laser_E', 'V', 'InitialState', 'L', 'N', 'te']
+    extra_params = ['legend', 'xlim', 'ylim', 'figsize', 'InitialCoeffs']
+    default_params = ['envelope', 'nsteps_per_period', 'refresh', 'scale', 'dpi', 'DisplayCoord', 'Nkh', 'ode_solver', 'tol', 'maxiter', 'ncv', 'PlotData', 'SaveData', 'SaveWaveFunction']
+    default_vals = ['const', 1e3, 50, 'linear', 300, 'lab', 2**12, 'BM4', 1e-10, 1000, 100, True, False, False]
     for param in compulsory_params:
         if hasattr(self, param):
             dict_.update({param: getattr(self, param)})
@@ -58,12 +60,9 @@ def generate_dict(self) -> dict:
         dict_['InitialState'] = [self.InitialState, 'V']
     if not hasattr(self, 'InitialCoeffs') and isinstance(dict_['InitialState'][0], (int, tuple)):
         dict_.update({'InitialCoeffs': xp.ones_like(dict_['InitialState'][0])})
-    extra_params = ['legend', 'xlim', 'ylim', 'figsize', 'InitialCoeffs']
     for param in extra_params:
         if hasattr(self, param):
             dict_.update({param: getattr(self, param)})
-    default_params = ['envelope', 'nsteps_per_period', 'refresh', 'scale', 'dpi', 'DisplayCoord', 'Nkh', 'ode_solver', 'tol', 'maxiter', 'ncv', 'PlotData', 'SaveData', 'SaveWaveFunction']
-    default_vals = ['const', 1e3, 50, 'linear', 300, 'lab', 2**12, 'BM4', 1e-10, 1000, 100, True, False, False]
     for param, val in zip(default_params, default_vals):
         dict_.update({param: val if not hasattr(self, param) else getattr(self, param)})
     if len(dict_['te']) != 3 and dict_['envelope'] != 'const':
@@ -82,8 +81,8 @@ class TDSE:
     def __str__(self) -> str:
         return f'Time-dependent Schrödinger equation ({self.__class__.__name__})'
 
-    def __init__(self) -> None:
-        dict_ = generate_dict(TDSE_params)
+    def __init__(self, params) -> None:
+        dict_ = generate_dict(params)
         for key in dict_:
             setattr(self, key, dict_[key])
         self.DictParams = dict_
