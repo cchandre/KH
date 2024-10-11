@@ -220,10 +220,10 @@ class TDSE:
         return xp.sqrt(xp.sum(xp.abs(psi)**2) * xp.prod(self.dx))
 
     def dipole(self, t:float, psi:xp.ndarray) -> xp.ndarray:
-        dd = xp.squeeze(self.xgrid)
-        DVgrid = ifftn(1j * self.kgrid * fftn(self.Vgrid))
-        da = -DVgrid.real - self.E(t)
-        return (xp.sum(xp.abs(psi)**2 * dd) * xp.prod(self.dx)).flatten(), (xp.sum(xp.abs(psi)**2 * da) * xp.prod(self.dx)).flatten()
+        dd = self.xgrid
+        da = xp.asarray([-ifftn(1j * k * fftn(self.Vgrid)).real - self.E(t)[...,_] for _, k in enumerate(self.kgrid)])
+        return xp.sum(xp.abs(psi)[xp.newaxis]**2 * dd, axis=tuple(range(1, self.dim + 1))) * xp.prod(self.dx),\
+            xp.sum(xp.abs(psi)[xp.newaxis]**2 * da, axis=tuple(range(1, self.dim + 1))) * xp.prod(self.dx)
 
     def compute_spectrum(self, t:float, vec:xp.ndarray) -> Tuple[xp.ndarray, xp.ndarray]:
         npoints = len(vec[0])
