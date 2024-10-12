@@ -44,27 +44,27 @@ def generate_dict(self) -> dict:
             dict_.update({param: getattr(self, param)})
         else:
             raise ValueError(f'The parameter {param} should be defined')
-    dict_['L'], dict_['N'] = xp.atleast_1d(self.L), xp.atleast_1d(self.N)
-    dict_['te'] = xp.atleast_1d(self.te)
-    dict_.update({'ncycles': dict_['te'].sum()}) 
-    Lg = self.Lg if hasattr(self, 'Lg') else dict_['L'].copy()
-    delta = self.delta if hasattr(self, 'delta') else dict_['L'] // 10
-    delta, Lg = xp.atleast_1d(delta), xp.atleast_1d(Lg)
-    dim = len(xp.atleast_1d(self.laser_E(0)))
-    if not len(delta) == len(dict_['L']):
-        delta = delta[0] * xp.ones_like(dict_['L'])
-    if not len(Lg) == len(dict_['L']):
-        Lg = Lg[0] * xp.ones_like(dict_['L'])
-    dict_.update({'Lg': Lg, 'delta': delta, 'dim': dim})
-    if isinstance(self.InitialState, (int, tuple, type(lambda:0))):
-        dict_['InitialState'] = [self.InitialState, 'V']
-    if not hasattr(self, 'InitialCoeffs') and isinstance(dict_['InitialState'][0], (int, tuple)):
-        dict_.update({'InitialCoeffs': xp.ones_like(dict_['InitialState'][0])})
     for param in extra_params:
         if hasattr(self, param):
             dict_.update({param: getattr(self, param)})
     for param, val in zip(default_params, default_vals):
         dict_.update({param: val if not hasattr(self, param) else getattr(self, param)})
+    dict_['L'], dict_['N'] = xp.atleast_1d(self.L), xp.atleast_1d(self.N)
+    dict_['te'] = xp.atleast_1d(self.te)
+    Lg = xp.atleast_1d(self.Lg) if hasattr(self, 'Lg') else dict_['L'].copy()
+    delta = xp.atleast_1d(self.delta) if hasattr(self, 'delta') else dict_['L'] // 10
+    dim = len(xp.atleast_1d(self.laser_E(0)))
+    if not len(delta) == len(dict_['L']):
+        delta = delta[0] * xp.ones_like(dict_['L'])
+    if not len(Lg) == len(dict_['L']):
+        Lg = Lg[0] * xp.ones_like(dict_['L'])
+    if not len(dict_['L']) == len(dict_['N']) == dim:
+        raise ValueError('Dimension of L, N and laser_E are not compatible')
+    dict_.update({'Lg': Lg, 'delta': delta, 'dim': dim})
+    if isinstance(self.InitialState, (int, tuple, type(lambda:0))):
+        dict_['InitialState'] = [self.InitialState, 'V']
+    if not hasattr(self, 'InitialCoeffs') and isinstance(dict_['InitialState'][0], (int, tuple)):
+        dict_.update({'InitialCoeffs': xp.ones_like(dict_['InitialState'][0])})
     if len(dict_['te']) != 3 and dict_['envelope'] != 'const':
         raise ValueError('The field envelope requires te to have 3 values (ramp-up, plateau, ramp-down)')
     if dict_['Method'] == 'Husimi':
@@ -92,8 +92,8 @@ class TDSE:
         self.Up = self.E0**2 / (4 * self.omega**2)
         self.q0 = self.E0 / self.omega**2
         self.E = xp.vectorize(lambda t: self.E0 * self.env(t) * xp.atleast_1d(self.laser_E(self.omega * t)), signature='()->(n)')
-        self.te = self.te * self.T
-        self.final_time = xp.sum(self.te)
+        self.ncycles = xp.sum(self.te)
+        self.te, self.final_time = self.te * self.T, self.ncycles * self.T
         self.step = self.T / self.nsteps_per_period
         self.vecx = tuple([xp.linspace(-L, L, N, endpoint=False, dtype=xp.float64) for L, N in zip(self.L, self.N)])
         self.xgrid = xp.asarray(xp.meshgrid(*self.vecx, indexing='ij'))
@@ -253,8 +253,8 @@ class TDSE:
         elif self.Method == 'HHG':
             if t > 0:
                 freq, spectrum = self.compute_spectrum(t, vec)
-                h[0].set_data((freq[1:], spectrum[0][1:]))
-                h[1].set_data((freq[1:], spectrum[1][1:]))
+                for _ in range(len(spectrum)):
+                    h[_].set_data((freq[1:], spectrum[_][1:]))
                 ax.set_xlim((1, max(freq)))
                 if xp.any(spectrum[0]):
                     ax.set_ylim((min(spectrum[0][1:]), max(spectrum[0][1:])))
