@@ -41,9 +41,9 @@ import TDSE_params as params
 
 darkmode = params.darkmode if hasattr(params, 'darkmode') else False
 if darkmode:
-	cs = ['k', 'w', 'c', 'm', 'r']
+	cs = ['k', 'w', 'c', 'm', 'r', 'g']
 else:
-	cs = ['w', 'k', 'c', 'm', 'r']
+	cs = ['w', 'k', 'c', 'm', 'r', 'g']
 cmap_psi = 'bwr'
 	
 plt.rc('figure', facecolor=cs[0], titlesize=30)
@@ -188,7 +188,13 @@ def display_axes(self, data, type:str='wavefunction'):
 	elif type == 'HHG':
 		fig, ax = plt.subplots(figsize=(8, 4) if not hasattr(self, 'figsize') else self.figsize)
 		fig.canvas.manager.set_window_title(f'TDSE simulation: HHG spectrum')
-		h = ax.plot([], [], cs[2], linewidth=2, label=r'dipole')[0], ax.plot([], [], cs[3], linewidth=2, label=r'acceleration')[0]
+		if self.dim == 1:
+			labels = ['dipole', 'acceleration']
+		elif self.dim == 2:
+			labels = ['dipole (x)', 'dipole (y)', 'acceleration (x)', 'acceleration (y)']
+		elif self.dim == 3:
+			labels = ['dipole (x)', 'dipole (y)', 'dipole (z)', 'acceleration (x)', 'acceleration (y)', 'acceleration (z)'] 
+		h = [ax.plot([], [], cs[_ + 2], linewidth=2, label=label)[0] for _, label in enumerate(labels)]
 		ax.axvline(x= (3.17 * self.Up + self.compute_Ip()) / self.omega, color='k', linewidth=2, label=r'$3.17 U_p + I_p$')
 		ax.set_xlabel('$\omega /\omega_\mathrm{field}$')
 		ax.set_yscale('log')

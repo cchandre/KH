@@ -218,18 +218,20 @@ class TDSE:
 
     def norm(self, psi:xp.ndarray) -> float:
         return xp.sqrt(xp.sum(xp.abs(psi)**2) * xp.prod(self.dx))
+		
+	def mean(self, vec:xp.ndarray, psi:xp.ndarray) -> float:
+		return xp.sum(xp.abs(psi)**2 * vec) * xp.prod(self.dx)
 
     def dipole(self, t:float, psi:xp.ndarray) -> xp.ndarray:
-        dd = self.xgrid
-        da = xp.asarray([-ifftn(1j * k * fftn(self.Vgrid)).real - self.E(t)[...,_] for _, k in enumerate(self.kgrid)])
-        return xp.sum(xp.abs(psi)[xp.newaxis]**2 * dd, axis=tuple(range(1, self.dim + 1))) * xp.prod(self.dx),\
-            xp.sum(xp.abs(psi)[xp.newaxis]**2 * da, axis=tuple(range(1, self.dim + 1))) * xp.prod(self.dx)
-
-    def compute_spectrum(self, t:float, vec:xp.ndarray) -> Tuple[xp.ndarray, xp.ndarray]:
-        npoints = len(vec[0])
-        vec_ = vec * hann(npoints)[xp.newaxis]
+        dd = list(self.xgrid)
+        da = [-ifftn(1j * k * fftn(self.Vgrid)).real - self.E(t)[...,_] for _, k in enumerate(self.kgrid)]
+		return [self.mean(d, psi) for d in dd.append(da)]
+		
+	def compute_spectrum(self, t:float, vec:xp.ndarray, d_order:int=0) -> Tuple[xp.ndarray, xp.ndarray]:
+        npoints = len(vec)
+        vec_ = vec * hann(npoints)
         f_hhg = 2 * xp.pi / t * rfftfreq(npoints, d=1/npoints)
-        return f_hhg / self.omega, [xp.abs(-rfft(vec_[0]) * f_hhg**2)**2, xp.abs(rfft(vec_[1]))**2]
+        return f_hhg / self.omega, xp.abs((1j * f_hhg)**d_order * rfft(vec_))**2
     
     def compute_husimi(self, psi:xp.ndarray, p:xp.ndarray, sigma:float) -> xp.ndarray:
         if self.dim != 1:
@@ -252,12 +254,11 @@ class TDSE:
                     h.set_clim(0, xp.abs(psi).max()**2)
         elif self.Method == 'HHG':
             if t > 0:
-                freq, spectrum = self.compute_spectrum(t, vec)
-                for _ in range(len(spectrum)):
-                    h[_].set_data((freq[1:], spectrum[_][1:]))
-                ax.set_xlim((1, max(freq)))
-                if xp.any(spectrum[0]):
-                    ax.set_ylim((min(spectrum[0][1:]), max(spectrum[0][1:])))
+                d_int = self.dim * (2,) + self.dim * (0,)
+                for _ in range(len(d_int)):
+					freq, spectrum = self.compute_spectrum(t, self.hhg[_], d_int[_])
+                    h[_].set_data((freq[1:], spectrum[1:]))
+                ax.set_xlim((1, self.nsteps_per_period // 2))
         elif self.Method == 'Husimi':
             psi = self.change_frame(t, vec)
             h.set_data(self.compute_husimi(psi, self.p_husimi, self.sigma_husimi))
@@ -275,14 +276,12 @@ class TDSE:
         return t_vec, psi_vec
     
     def chi(self, h:float, t:float, psi:xp.ndarray) -> xp.ndarray:
-        psi = ifftn(xp.exp(-1j * self.Lap * h) * fftn(psi))
         Vgrid = self.Vgrid + xp.einsum('i...,...i->...', self.xgrid, self.E(t))
-        return xp.exp(-1j * Vgrid * h) * psi * self.Abs
+        return xp.exp(-1j * Vgrid * h) * ifftn(xp.exp(-1j * self.Lap * h) * psi) * self.Abs
     
     def chi_star(self, h:float, t:float, psi:xp.ndarray) -> xp.ndarray:
         Vgrid = self.Vgrid + xp.einsum('i...,...i->...', self.xgrid, self.E(t))
-        psi = xp.exp(-1j * Vgrid * h) * psi
-        return ifftn(xp.exp(-1j * self.Lap * h) * fftn(psi)) * self.Abs
+        return xp.exp(-1j * self.Lap * h) * fftn(xp.exp(-1j * Vgrid * h) * psi)
     
     def initcond(self) -> Tuple[xp.ndarray, float, float]:
         if isinstance(self.InitialState[0], (int, tuple)):
