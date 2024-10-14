@@ -223,9 +223,9 @@ class TDSE:
 		return xp.sum(xp.abs(psi)**2 * vec) * xp.prod(self.dx)
 
     def dipole(self, t:float, psi:xp.ndarray) -> xp.ndarray:
-        dd = list(self.xgrid)
-        da = [-ifftn(1j * k * fftn(self.Vgrid)).real - self.E(t)[...,_] for _, k in enumerate(self.kgrid)]
-		return [self.mean(d, psi) for d in dd.append(da)]
+        d = list(self.xgrid)
+        d.extend([-ifftn(1j * k * fftn(self.Vgrid)).real - self.E(t)[...,_] for _, k in enumerate(self.kgrid)])
+		return [self.mean(_, psi) for _ in d]
 		
 	def compute_spectrum(self, t:float, vec:xp.ndarray, d_order:int=0) -> Tuple[xp.ndarray, xp.ndarray]:
         npoints = len(vec)
