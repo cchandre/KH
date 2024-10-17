@@ -75,8 +75,6 @@ def generate_dict(self) -> dict:
     return dict_
 
 class TDSE:
-    def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self.DictParams})'
 
     def __str__(self) -> str:
         return f'Time-dependent Schrödinger equation ({self.__class__.__name__})'
