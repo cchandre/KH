@@ -217,15 +217,15 @@ class TDSE:
     def norm(self, psi:xp.ndarray) -> float:
         return xp.sqrt(xp.sum(xp.abs(psi)**2) * xp.prod(self.dx))
 		
-	def mean(self, vec:xp.ndarray, psi:xp.ndarray) -> float:
-		return xp.sum(xp.abs(psi)**2 * vec) * xp.prod(self.dx)
+    def mean(self, vec:xp.ndarray, psi:xp.ndarray) -> float:
+        return xp.sum(xp.abs(psi)**2 * vec) * xp.prod(self.dx)
 
     def dipole(self, t:float, psi:xp.ndarray) -> xp.ndarray:
         d = list(self.xgrid)
         d.extend([-ifftn(1j * k * fftn(self.Vgrid)).real - self.E(t)[...,_] for _, k in enumerate(self.kgrid)])
-		return [self.mean(_, psi) for _ in d]
-		
-	def compute_spectrum(self, t:float, vec:xp.ndarray, d_order:int=0) -> Tuple[xp.ndarray, xp.ndarray]:
+        return [self.mean(_, psi) for _ in d]
+    
+    def compute_spectrum(self, t:float, vec:xp.ndarray, d_order:int=0) -> Tuple[xp.ndarray, xp.ndarray]:
         npoints = len(vec)
         vec_ = vec * hann(npoints)
         f_hhg = 2 * xp.pi / t * rfftfreq(npoints, d=1/npoints)
@@ -254,7 +254,7 @@ class TDSE:
             if t > 0:
                 d_int = self.dim * (2,) + self.dim * (0,)
                 for _ in range(len(d_int)):
-					freq, spectrum = self.compute_spectrum(t, self.hhg[_], d_int[_])
+                    freq, spectrum = self.compute_spectrum(t, self.hhg[_], d_int[_])
                     h[_].set_data((freq[1:], spectrum[1:]))
                 ax.set_xlim((1, self.nsteps_per_period // 2))
         elif self.Method == 'Husimi':
