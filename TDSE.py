@@ -182,9 +182,9 @@ def display_axes(self, data, type:str='wavefunction'):
 			if hasattr(self, 'ylim'):
 				ax.set_ylim((self.ylim[0] / self.q0, self.ylim[1] / self.q0))
 			fig.colorbar(h, ax=ax, shrink=0.5)
-			ax.set_ylabel('$y/q$')
+			ax.set_ylabel('$y/q$' if self.DisplayCoord.startswith('KH') else r'$y_\mathrm{e}/q$')
 		ax.set_title('$t / T = 0 $', loc='right', pad=20)
-		ax.set_xlabel('$x/q$')
+		ax.set_xlabel('$x/q$' if self.DisplayCoord.startswith('KH') else r'$x_\mathrm{e}/q$')
 	elif type == 'HHG':
 		fig, ax = plt.subplots(figsize=(8, 4) if not hasattr(self, 'figsize') else self.figsize)
 		fig.canvas.manager.set_window_title(f'TDSE simulation: HHG spectrum')
